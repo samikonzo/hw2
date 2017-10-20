@@ -10,7 +10,29 @@
 </head>
 <body>
 
- 
+  <div class="todoList-wrapper">
+    <img class="logo" alt="TODOLIST">
+    <input type="text" class="addTask" autofocus placeholder="what needs to be done?">
+   
+    <ul class="taskList">
+      <li class="task-item task-item--template">
+        <input type="checkbox" name="" class="task-item__flag-done"><span class="task-item__task"></span> <span class="task-item__deadline task-item__deadline--hidden">__.__.____</span> <button class="task-item__removeTask task-item__removeTask--hidden">X</button>
+      </li>
+    </ul>
+
+
+    <footer>
+      <ul class="filters"> filters
+        <li class="filters__item filters__item--unselected">done</li>
+        <li class="filters__item filters__item--unselected">tommorow</li>
+        <li class="filters__item filters__item--unselected">week</li>
+        <li class="filters__item filters__item--unselected">all</li>
+        <li class="filters__item filters__item--unselected">not done</li>
+      </ul>
+      <div class="info">infobar</div>
+    </footer>
+    
+  </div>
 
 </body>
 </html>

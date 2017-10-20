@@ -1,5 +1,95 @@
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
+  max-height: 100%;
+  background: #eee;
+}
+
+
+.todoList-wrapper{
+  width: 400px;
+  margin: 50px auto;
+  padding: 20px;
+  background:  white;
+  box-shadow: 0px 0px 10px #ccc;
+}
+
+.logo{
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.addTask{
+  display: block;
+  width: 250px;
+  margin: 20px auto 0;
+  padding: 5px 10px;
+  outline: none;
+}
+
+
+.taskList{
+  position: relative;
+  list-style-type: none;
+}
+
+.task-item{
+  border: 1px solid blue;
+  padding: 10px;
+}
+
+.task-item__flag-done{
+
+}
+
+.task-item__task{
+  display: inline-block;
+  max-width: 150px;
+  word-wrap: break-word;
+  border:  1px solid red;
+}
+
+.task-item__deadline{
+  position: absolute;
+  left: 230px;
+  max-width: 100px;
+  border:  1px solid red;
+}
+.task-item__deadline--hidden{
+
+}
+
+.task-item__removeTask{
+  position:  absolute;
+  right: 50px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  border-radius: 50%;
+  color: white;
+  background:  lightgrey;
+  border:  none;
+  outline:  none;
+  transition: .5s;
+}
+.task-item__removeTask--hidden{}
+.task-item__removeTask:hover{
+  background:  grey;
+}
+
+
+.task-item__task-edit{
+
+}
+.task-item__task-edit--task{
+  max-width: 150px;
+}
+.task-item__task-edit--deadline{
+  outline:  none;
+  position: absolute;
+  width:  150px;
+  left: 170px;
+  display: inline-block;
 }
