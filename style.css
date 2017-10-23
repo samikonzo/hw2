@@ -44,7 +44,8 @@ html, body {
   position: relative;
   border: 1px solid blue;
 
-  /* min-height: 30px; */
+  min-height: 30px;
+  max-height: 999px;
   padding: 0 10px;
   margin: 10px 0 0;
   text-decoration: none;
@@ -55,15 +56,14 @@ html, body {
   align-items: center;
   align-content: stretch; 
 
-  /* max-height: 0px;
-  min-height: 0px;
-  height: 0px; */
   overflow: hidden;
-  transition: 1s;
+  transition: .5s linear;
+  box-sizing: border-box;
 }
 .task-item--hidden{
-  max-height: 0px;
-  /* display: none; */
+  display:  none;
+  min-height: 0px;
+  max-height:  0px;
 }
 
 /*------------------CHECKBOX---------------------*/
@@ -134,7 +134,16 @@ html, body {
   word-wrap: break-word;
   padding: 10px;
   box-sizing: border-box;
+  cursor:  default;
 }
+.task-item--done .task-item__task{
+  text-decoration: line-through;
+}
+.task-item__task:hover{
+  text-decoration:  none;
+}
+
+
 
 .task-item__deadline{
   display: inline-block;
@@ -282,6 +291,17 @@ html, body {
   height: 40px;
   width: 460px;
   border:1px solid;
+  opacity:  1;
+  transition: .5s;
+}
+.infobar--hidden{
+  opacity:  0;
 }
 .infobar__remain{}
-.infobar__remove-btn{}
+.infobar__remove-btn{
+  opacity:  1;
+  transition:  .5s;
+}
+.infobar__remove-btn--hidden{
+  opacity:  0;
+}

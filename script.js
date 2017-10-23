@@ -1,13 +1,16 @@
 'use strict'
 var l = console.log;
 
-
 var todoList = new TodoListModule()
 todoList.init(document.getElementsByClassName('todoList-wrapper')[0])
 
 
 function TodoListModule(){
-	var elem, addTaskInput, taskList, filters;
+	var elem, addTaskInput, taskList, filters, infobar,
+		tasksObj = {
+			tasksCount : 0,
+			tasksSelected : 0,
+		};
 		
 	const KEY_ENTER_KEYCODE = 13,
 		KEY_ESC_KEYCODE = 27;
@@ -76,8 +79,10 @@ function TodoListModule(){
 			//need to create template for generate in empty block!
 			elem = domElem;
 			addTaskInput = domElem.getElementsByClassName('addTask')[0];
-			taskList =domElem.getElementsByClassName('taskList')[0];
+			taskList = domElem.getElementsByClassName('taskList')[0];
 			filters = domElem.getElementsByClassName('filters')[0];
+			infobar = domElem.getElementsByClassName('infobar')[0];
+
 			addListeners()
 		}
 	}
@@ -212,6 +217,11 @@ function TodoListModule(){
 					break;
 			}
 
+			//visible count
+			var visibleCount = taskList.querySelectorAll('.task-item:not(.task-item--hidden)').length;
+			l('visibleCount : ', visibleCount)
+
+
 			function isThisWeek(date){
 				var today = new Date(),
 					dayNum = today.getDay(),
@@ -220,10 +230,12 @@ function TodoListModule(){
 
 				dayNum = dayNum == 0 ? 6 : dayNum - 1;
 				thisWeekMinDate.setDate(today.getDate() - dayNum);
+				thisWeekMinDate.setHours(0,0,0,0);
 				thisWeekMaxDate.setDate(today.getDate() + (6 - dayNum));
+				thisWeekMaxDate.setHours(0,0,0,0);
 					
 				//l('date : ', date)	
-				//l('daynum : ', dayNum);
+				//l('dayNum : ', dayNum);
 				//l('thisWeekMinDate : ', thisWeekMinDate);
 				//l('thisWeekMaxDate : ', thisWeekMaxDate);
 				//l('date.getTime() >= thisWeekMinDate.getTime() : ', date.getTime() >= thisWeekMinDate.getTime());
@@ -238,6 +250,66 @@ function TodoListModule(){
 
 			}
 		})
+
+		//checkbox
+		elem.addEventListener('click', e => {
+			var target = e.target,
+				li;
+
+			if(target.nodeName != 'INPUT' || target.getAttribute('type') != 'checkbox') return
+
+			li = target.closest('li')
+
+			if(target.checked){
+				li.classList.add('task-item--done');
+				tasksObj.tasksSelected++;
+			} else {
+				li.classList.remove('task-item--done');
+				tasksObj.tasksSelected--;
+			}
+		})
+
+		//tasksObj and infobar
+		makeChangeListening(tasksObj, 'tasksCount', infobar);
+		makeChangeListening(tasksObj, 'tasksSelected', infobar);
+		infobar.addEventListener('change', e => {
+			var prop = e.detail.prop,
+				value = e.detail.value;
+
+			//switch(prop){
+			//	case 'tasksSelected' : 
+			//		var infobarSelected = infobar.getElementsByClassName('infobar__selected')[0],
+			//			infobarRemoveBtn = infobar.getElementsByClassName('infobar__remove-btn')[0];
+			//		infobarSelected.innerHTML = value;
+			//		
+			//		if(value){
+			//			infobarRemoveBtn.classList.remove('infobar__remove-btn--hidden')
+			//		} else {
+			//			infobarRemoveBtn.classList.add('infobar__remove-btn--hidden')
+			//		}
+			//		break;
+//
+			//	case 'tasksCount' : 
+			//		var infobarRemain = infobar.getElementsByClassName('infobar__remain')[0],
+			//			selected = tasksObj.tasksSelected;
+//
+			//		infobarRemain.innerHTML = value - selected;
+			//		l(' ');
+			//		l('value : ', value);
+			//		l('selected : ', selected);
+			//		l(' ')
+//
+			//		if(value){
+			//			infobar.classList.remove('infobar--hidden');
+			//		} else {
+			//			infobar.classList.add('infobar--hidden');
+			//		}
+			//		break;
+			//}
+//
+			//l(e.detail);
+		})
+
 
 	}
 
@@ -277,11 +349,42 @@ function TodoListModule(){
 		li.classList.remove('task-item--template');
 		taskSpan.textContent = task;
 		taskList.appendChild(li);
+
+		tasksObj.tasksCount++;
 	}
 
 	function todoListClearTaskInput(){
 		addTaskInput.value = ''
 	}
 
+
+	//extra functions
+	function makeChangeListening(obj, prop, element, eventName){
+		var startValue = obj[prop];
+
+		eventName = eventName || 'change';
+
+		Object.defineProperty(obj, prop, {
+			get: function(){ return startValue},
+			set: function(n){
+				Object.defineProperty(obj, prop, {
+					get: function(){ return n }
+				});
+
+				var widgetEvent = new CustomEvent(eventName, {
+					bubbles : true,
+					detail: {
+						prop: prop,
+						value : n
+					}
+				})
+
+				element.dispatchEvent(widgetEvent);
+			}
+		})
+	}
+
+
+	//public
 	this.init = render	
 }
