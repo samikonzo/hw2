@@ -7,7 +7,7 @@ todoList.init(document.getElementsByClassName('todoList-wrapper')[0])
 
 
 function TodoListModule(){
-	var elem, addTaskInput, taskList;
+	var elem, addTaskInput, taskList, filters;
 		
 	const KEY_ENTER_KEYCODE = 13,
 		KEY_ESC_KEYCODE = 27;
@@ -38,7 +38,9 @@ function TodoListModule(){
 					this.relatedSpan.innerHTML = this.value.replace(/(\d*)?-(\d*)?-(\d*)/, '$3.$2.$1');
 
 					if(!this.value){
-						this.relatedSpan.innerHTML = this.startValue
+						this.relatedSpan.classList.add('task-item__deadline--empty')
+					} else {
+						this.relatedSpan.classList.remove('task-item__deadline--empty')
 					}
 
 				} else {
@@ -46,7 +48,7 @@ function TodoListModule(){
 						var currentLi = tempInput.closest('li');
 						currentLi.remove()
 						return
-					}
+					} 
 
 					this.relatedSpan.innerHTML = this.value
 				}
@@ -75,7 +77,7 @@ function TodoListModule(){
 			elem = domElem;
 			addTaskInput = domElem.getElementsByClassName('addTask')[0];
 			taskList =domElem.getElementsByClassName('taskList')[0];
-
+			filters = domElem.getElementsByClassName('filters')[0];
 			addListeners()
 		}
 	}
@@ -131,13 +133,112 @@ function TodoListModule(){
 			var target = e.target,
 				li = target.closest('li');
 			if(!li) return
-			
-			
 		})
 		//mouseout
 		elem.addEventListener('mouseout', e => {
-
 		})
+
+		//filters
+		filters.addEventListener('click', e => {
+			var target = e.target;
+			if(target.nodeName != 'LI') return
+			if(target.classList && target.classList.contains('filters__item--selected')) return
+
+			//replace class --selected
+			filters.getElementsByClassName('filters__item--selected')[0].classList.remove('filters__item--selected');
+			target.classList.add('filters__item--selected');
+
+			//change block value 
+			var selector = target.getAttribute('value');
+			filters.setAttribute('value', selector)
+
+			//switch selected
+			var items = taskList.getElementsByClassName('task-item');
+			switch(selector){
+				case 'all' : 
+					[].forEach.call(items, el => {
+						el.classList.remove('task-item--hidden');
+					})
+					break;
+
+				case 'done' : 
+					[].forEach.call(items, el => {
+						if(el.classList.contains('task-item--done')){
+							el.classList.remove('task-item--hidden')
+						} else {
+							el.classList.add('task-item--hidden')
+						}
+					})
+					break;
+
+				case 'not-done' : 
+					[].forEach.call(items, el => {
+						if(!el.classList.contains('task-item--done')){
+							el.classList.remove('task-item--hidden')
+						} else {
+							el.classList.add('task-item--hidden')
+						}
+					})
+					break;
+
+				case 'tomorrow' : 
+					[].forEach.call(items, el => {
+						var tomorrow = new Date();
+						tomorrow.setDate(tomorrow.getDate() + 1);
+						tomorrow.setHours(0,0,0,0);
+
+						var deadline = el.getElementsByClassName('task-item__deadline')[0].innerHTML,
+							deadlineDate = new Date( deadline.replace(/(\d*)?\.(\d*)?\.(\d*)/, '$3 $2 $1') );
+
+						if(deadlineDate.getTime() == tomorrow.getTime()){
+							el.classList.remove('task-item--hidden');
+						} else {
+							el.classList.add('task-item--hidden')
+						}
+					})
+					break;
+
+				case 'week' : 
+					[].forEach.call(items, el => {
+						var deadline = el.getElementsByClassName('task-item__deadline')[0].innerHTML,
+							deadlineDate = new Date( deadline.replace(/(\d*)?\.(\d*)?\.(\d*)/, '$3 $2 $1') );
+
+						if(isThisWeek(deadlineDate)){
+							el.classList.remove('task-item--hidden');
+						} else {
+							el.classList.add('task-item--hidden')
+						}
+					})
+					break;
+			}
+
+			function isThisWeek(date){
+				var today = new Date(),
+					dayNum = today.getDay(),
+					thisWeekMinDate = new Date(),
+					thisWeekMaxDate = new Date();
+
+				dayNum = dayNum == 0 ? 6 : dayNum - 1;
+				thisWeekMinDate.setDate(today.getDate() - dayNum);
+				thisWeekMaxDate.setDate(today.getDate() + (6 - dayNum));
+					
+				//l('date : ', date)	
+				//l('daynum : ', dayNum);
+				//l('thisWeekMinDate : ', thisWeekMinDate);
+				//l('thisWeekMaxDate : ', thisWeekMaxDate);
+				//l('date.getTime() >= thisWeekMinDate.getTime() : ', date.getTime() >= thisWeekMinDate.getTime());
+				//l('date.getTime() <= thisWeekMaxDate.getTime()) : ', date.getTime() <= thisWeekMaxDate.getTime());
+				//l(' ');
+				//l(' ');
+				
+				if(date.getTime() >= thisWeekMinDate.getTime() &&
+					date.getTime() <= thisWeekMaxDate.getTime()) return true
+
+				return false	
+
+			}
+		})
+
 	}
 
 	function edit(span){

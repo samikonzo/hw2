@@ -13,23 +13,32 @@
   <div class="todoList-wrapper">
     <img class="logo" alt="TODOLIST">
     <input type="text" class="addTask" autofocus placeholder="what needs to be done?">
+
+    <ul class="filters"> 
+        <li class="filters__item  filters__item--selected" value="all">all</li>
+        <li class="filters__item" value="done">done</li>
+        <li class="filters__item" value="not-done">not done</li>
+        <li class="filters__item" value="tomorrow">tomorrow</li>
+        <li class="filters__item" value="week">week</li>
+      </ul>
    
     <ul class="taskList">
       <li class="task-item task-item--template">
-        <input type="checkbox" name="" class="task-item__flag-done"><span class="task-item__task"></span> <span class="task-item__deadline task-item__deadline--hidden">__.__.____</span> <button class="task-item__removeTask task-item__removeTask--hidden">X</button>
+        <label class="task-item__checkbox-label"> <input type="checkbox" name="" class="task-item__checkbox"> </label>
+        <span class="task-item__task"></span>
+        <span class="task-item__deadline task-item__deadline--empty noselect"></span> 
+        <button class="task-item__removeTask task-item__removeTask--hidden">X</button>
       </li>
     </ul>
 
 
     <footer>
-      <ul class="filters"> filters
-        <li class="filters__item filters__item--unselected">done</li>
-        <li class="filters__item filters__item--unselected">tommorow</li>
-        <li class="filters__item filters__item--unselected">week</li>
-        <li class="filters__item filters__item--unselected">all</li>
-        <li class="filters__item filters__item--unselected">not done</li>
-      </ul>
-      <div class="info">infobar</div>
+      
+     
+      <div class="infobar">
+        <span class="infobar__remain">information about remaining events</span>
+        <button class="infobar__remove-btn">show count of selected | remove it</button>
+      </div>
     </footer>
     
   </div>
