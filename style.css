@@ -65,6 +65,9 @@ html, body {
   min-height: 0px;
   max-height:  0px;
 }
+.task-item--template{
+  display:  none;
+}
 
 /*------------------CHECKBOX---------------------*/
   .task-item__checkbox-label{
@@ -286,6 +289,20 @@ html, body {
   color: white;
 }
 
+
+.no-tasks {
+  width:  100%;
+  border:  1px solid;
+  text-align: center;
+  transition:  1s;
+  max-height: 40px;
+  box-sizing:  border-box;
+  overflow: hidden;
+}
+.no-tasks--hidden{
+  opacity:  0;
+  max-height: 0;
+}
 
 .infobar{
   height: 40px;

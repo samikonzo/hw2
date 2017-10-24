@@ -21,9 +21,11 @@
         <li class="filters__item" value="tomorrow">tomorrow</li>
         <li class="filters__item" value="week">week</li>
       </ul>
+
+    <div class="no-tasks no-tasks--hidden"> Нет заданий удовлетворяющих требованию </div>
    
     <ul class="taskList">
-      <li class="task-item task-item--template">
+      <li class="task-item task-item--template task-item--hidden">
         <label class="task-item__checkbox-label"> <input type="checkbox" name="" class="task-item__checkbox"> </label>
         <span class="task-item__task"></span>
         <span class="task-item__deadline task-item__deadline--empty noselect"></span> 
@@ -36,7 +38,7 @@
       
      
       <div class="infobar infobar--hidden">
-        <span class="infobar__remain">information about remaining events</span>
+        remaining events : <span class="infobar__remain"></span>
         <button class="infobar__remove-btn infobar__remove-btn--hidden">done: <span class="infobar__selected">0</span> | remove it </button>
       </div>
     </footer>

@@ -6,7 +6,9 @@ todoList.init(document.getElementsByClassName('todoList-wrapper')[0])
 
 
 function TodoListModule(){
-	var elem, addTaskInput, taskList, filters, infobar,
+	var elem, addTaskInput, taskList, filters, 
+		infobar, infobarSelected, infobarRemoveBtn, infobarRemain,
+		noTasksMessage,
 		tasksObj = {
 			tasksCount : 0,
 			tasksSelected : 0,
@@ -82,6 +84,10 @@ function TodoListModule(){
 			taskList = domElem.getElementsByClassName('taskList')[0];
 			filters = domElem.getElementsByClassName('filters')[0];
 			infobar = domElem.getElementsByClassName('infobar')[0];
+			infobarSelected = infobar.getElementsByClassName('infobar__selected')[0];
+			infobarRemoveBtn = infobar.getElementsByClassName('infobar__remove-btn')[0];
+			infobarRemain = infobar.getElementsByClassName('infobar__remain')[0];
+			noTasksMessage = domElem.getElementsByClassName('no-tasks')[0];
 
 			addListeners()
 		}
@@ -129,7 +135,7 @@ function TodoListModule(){
 					delete target.firstClick
 				},500)
 			} else {
-				edit(target);
+				itemEdit(target);
 			}
 		})
 
@@ -162,7 +168,7 @@ function TodoListModule(){
 			switch(selector){
 				case 'all' : 
 					[].forEach.call(items, el => {
-						el.classList.remove('task-item--hidden');
+						 el.classList.remove('task-item--hidden');
 					})
 					break;
 
@@ -220,7 +226,11 @@ function TodoListModule(){
 			//visible count
 			var visibleCount = taskList.querySelectorAll('.task-item:not(.task-item--hidden)').length;
 			l('visibleCount : ', visibleCount)
-
+			if(!visibleCount){
+				noTasksMessage.classList.remove('no-tasks--hidden')
+			} else {
+				noTasksMessage.classList.add('no-tasks--hidden')
+			}
 
 			function isThisWeek(date){
 				var today = new Date(),
@@ -276,44 +286,42 @@ function TodoListModule(){
 			var prop = e.detail.prop,
 				value = e.detail.value;
 
-			//switch(prop){
-			//	case 'tasksSelected' : 
-			//		var infobarSelected = infobar.getElementsByClassName('infobar__selected')[0],
-			//			infobarRemoveBtn = infobar.getElementsByClassName('infobar__remove-btn')[0];
-			//		infobarSelected.innerHTML = value;
-			//		
-			//		if(value){
-			//			infobarRemoveBtn.classList.remove('infobar__remove-btn--hidden')
-			//		} else {
-			//			infobarRemoveBtn.classList.add('infobar__remove-btn--hidden')
-			//		}
-			//		break;
-//
-			//	case 'tasksCount' : 
-			//		var infobarRemain = infobar.getElementsByClassName('infobar__remain')[0],
-			//			selected = tasksObj.tasksSelected;
-//
-			//		infobarRemain.innerHTML = value - selected;
-			//		l(' ');
-			//		l('value : ', value);
-			//		l('selected : ', selected);
-			//		l(' ')
-//
-			//		if(value){
-			//			infobar.classList.remove('infobar--hidden');
-			//		} else {
-			//			infobar.classList.add('infobar--hidden');
-			//		}
-			//		break;
-			//}
-//
-			//l(e.detail);
+			infobarRemain.innerHTML = tasksObj.tasksCount - tasksObj.tasksSelected;
+			infobarSelected.innerHTML = tasksObj.tasksSelected;
+
+			if(tasksObj.tasksCount){
+				infobar.classList.remove('infobar--hidden');
+			} else {
+				infobar.classList.add('infobar--hidden');
+			}
+			
+			if(tasksObj.tasksSelected){
+				infobarRemoveBtn.classList.remove('infobar__remove-btn--hidden')
+			} else {
+				infobarRemoveBtn.classList.add('infobar__remove-btn--hidden')
+			}
+
+			switch(prop){
+				case 'tasksSelected' : 
+					infobarSelected.innerHTML = value;
+					break;
+
+				case 'tasksCount' : 
+					break;		
+			}
 		})
 
+		infobarRemoveBtn.onclick = function(e){
+			tasksObj.tasksCount -= 	tasksObj.tasksSelected;
+			tasksObj.tasksSelected = 0;
 
+			[].slice.call(taskList.getElementsByClassName('task-item--done')).forEach(li => {
+				li.remove()
+			})
+		}
 	}
 
-	function edit(span){
+	function itemEdit(span){
 		var startValue = span.innerHTML;
 
 		if(span.classList.contains('task-item__task')){
@@ -347,6 +355,8 @@ function TodoListModule(){
 
 
 		li.classList.remove('task-item--template');
+		li.classList.remove('task-item--hidden');
+		
 		taskSpan.textContent = task;
 		taskList.appendChild(li);
 
