@@ -6,6 +6,54 @@ todoList.init(document.getElementsByClassName('todoList-wrapper')[0])
 
 
 function TodoListModule(){
+	var widget;
+
+	// classes
+	// some def classes
+		var WRAPPER_CLASS = 'todoList-wrapper',
+			MAIN_INPUT_CLASS = 'addTask',
+			FILTERS_CLASS = 'filters',
+			FILTER_ITEM_CLASS = 'filters__item',
+			FILTER_ITEM_SELECTERD_CLASS = 'filters__item--selected',
+			TASK_LIST_CLASS = 'taskList',
+			TASK_ITEM_CLASS = 'task-item',
+			TASK_ITEM_TEMPLATE_CLASS= 'task-item--template',
+			TASK_ITEM_CHECKBOX_LABEL_CLASS = 'task-item__checkbox-label',
+			TASK_ITEM_CHECKBOX_CLASS = 'task-item__checkbox',
+			TASK_ITEM_TASK_CLASS= 'task-item__task',
+			TASK_ITEM_DEADLINE_CLASS = 'task-item__deadline',
+			TASK_ITEM_DEADLINE_EMPTY_CLASS = 'task-item__deadline--empty',
+			TASK_ITEM_REMOVE_TASK_CLASS = 'task-item__removeTask',
+			TASK_ITEM_REMOVE_TASK_HIDDEN_CLASS = 'task-item__removeTask--hidden',
+			INFOBAR_CLASS = 'infobar',
+			INFOBAR_HIDDEN_CLASS = 'infobar--hidden',
+			INFOBAR_REMAIN_CLASS = 'infobar__remain',
+			INFOBAR_REMOVE_BTN_CLASS = 'infobar__remove-btn',
+			INFOBAR_REMOVE_BTN_HIDDEN_CLASS = 'infobar__remove-btn--hidden',
+			INFOBAR_SELECTED_CLASS = 'infobar__selected';
+	////////////////////////////////////////////////////////////////////////////
+
+
+
+	function templater(html){
+		return function(data){
+			for(var x in data){
+				var regExp = "{{\\s?” + x + “\\s?}";
+				html = html.replace(new RegExp(regExp,'ig'), data[x]);
+			}
+		}
+	}
+
+	function initialize(domElem) {
+		if(!widget){
+			widget = domElem;
+		}
+	}
+
+	this.init = initialize
+}
+
+/*function TodoListModule(){
 	var elem, addTaskInput, taskList, filters, infobar,
 		tasksObj = {
 			tasksCount : 0,
@@ -288,17 +336,17 @@ function TodoListModule(){
 			//			infobarRemoveBtn.classList.add('infobar__remove-btn--hidden')
 			//		}
 			//		break;
-//
+
 			//	case 'tasksCount' : 
 			//		var infobarRemain = infobar.getElementsByClassName('infobar__remain')[0],
 			//			selected = tasksObj.tasksSelected;
-//
+
 			//		infobarRemain.innerHTML = value - selected;
 			//		l(' ');
 			//		l('value : ', value);
 			//		l('selected : ', selected);
 			//		l(' ')
-//
+
 			//		if(value){
 			//			infobar.classList.remove('infobar--hidden');
 			//		} else {
@@ -306,7 +354,7 @@ function TodoListModule(){
 			//		}
 			//		break;
 			//}
-//
+
 			//l(e.detail);
 		})
 
@@ -387,4 +435,5 @@ function TodoListModule(){
 
 	//public
 	this.init = render	
-}
+}*/
+
