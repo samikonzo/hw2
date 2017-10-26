@@ -227,7 +227,6 @@ html, body {
 .task-item:hover .task-item__removeTask{
   opacity: 1;
 }
-.task-item__removeTask--hidden{}
 .task-item__removeTask:hover{
   background:  grey;
 }
@@ -304,4 +303,18 @@ html, body {
 }
 .infobar__remove-btn--hidden{
   opacity:  0;
+}
+
+
+.no-tasks{
+  width:  100%;
+  height:  40px;
+  overflow:  hidden;
+  opacity:  1;
+  transition:  .5s .2s;
+}
+.no-tasks--hidden{
+  height:  0;
+  opacity: 0;
+  transition: .5s 0s;
 }
