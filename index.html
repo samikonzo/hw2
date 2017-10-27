@@ -36,7 +36,9 @@
       </ul>
 
       <div class="{{ INFOBAR_CLASS }} {{ INFOBAR_HIDDEN_CLASS }}">
-        remaining events:<span class="{{ INFOBAR_REMAIN_CLASS }}"></span>
+        <div class="{{ INFOBAR_REMAIN_CLASS }}">
+          remaining events:<span class="{{ INFOBAR_REMAIN_COUNT_CLASS }}"></span>
+        </div>
         <button class="{{ INFOBAR_REMOVE_BTN_CLASS }} {{ INFOBAR_REMOVE_BTN_HIDDEN_CLASS }}">done: <span class="{{ INFOBAR_SELECTED_CLASS }} {{ INFOBAR_SPARE_CLASS}}">0</span> | remove it </button>
       </div>
   </script>

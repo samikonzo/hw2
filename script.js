@@ -9,7 +9,8 @@ function TodoListModule(){
 	var widget, widget_task_template, widget_addTask, widget_taskList,
 		widget_filters,  widget_noTasksMessage,
 		widget_infobar, widget_infobarRemain, widget_infobarSelected, widget_infobarRemoveBtn,
-		tasksObj = {tasksCount : 0,	tasksSelected : 0},
+		tasksObj = {tasksCount : 0,	tasksSelected : 0, tasks : {}},
+		taskId = 0,
 		todoList_template = document.getElementById('todoList-template').innerHTML,
 		todoList_task_item_template = document.getElementById('todoList-task-item-template').innerHTML,
 		tempInput;
@@ -26,10 +27,11 @@ function TodoListModule(){
 			FILTERS_ITEM_SELECTED_CLASS = 'filters__item--selected',
 			NO_TASK_CLASS = 'no-tasks',
 			NO_TASK_HIDDEN_CLASS = 'no-tasks--hidden',
-			TASK_LIST_CLASS = 'widget_taskList',
+			TASK_LIST_CLASS = 'taskList',
 			INFOBAR_CLASS = 'infobar',
 			INFOBAR_HIDDEN_CLASS = 'infobar--hidden',
 			INFOBAR_REMAIN_CLASS = 'infobar__remain',
+			INFOBAR_REMAIN_COUNT_CLASS = 'infobar__remain-count',
 			INFOBAR_REMOVE_BTN_CLASS = 'infobar__remove-btn',
 			INFOBAR_REMOVE_BTN_HIDDEN_CLASS = 'infobar__remove-btn--hidden',
 			INFOBAR_SELECTED_CLASS = 'infobar__selected',
@@ -60,7 +62,7 @@ function TodoListModule(){
 			TASK_LIST_CLASS : TASK_LIST_CLASS ,
 			INFOBAR_CLASS : INFOBAR_CLASS ,
 			INFOBAR_HIDDEN_CLASS : INFOBAR_HIDDEN_CLASS ,
-			INFOBAR_REMAIN_CLASS : INFOBAR_REMAIN_CLASS ,
+			INFOBAR_REMAIN_COUNT_CLASS : INFOBAR_REMAIN_COUNT_CLASS ,
 			INFOBAR_REMOVE_BTN_CLASS : INFOBAR_REMOVE_BTN_CLASS ,
 			INFOBAR_REMOVE_BTN_HIDDEN_CLASS : INFOBAR_REMOVE_BTN_HIDDEN_CLASS ,
 			INFOBAR_SELECTED_CLASS : INFOBAR_SELECTED_CLASS ,
@@ -82,115 +84,39 @@ function TodoListModule(){
 		}	
 	////////////////////////////////////////////////////////////////////////////
 
-	// tempInput
-		var tempInput = document.createElement('input');
-		tempInput.classList.add(TASK_ITEM_TASK_EDIT_CLASS)		
 
-		tempInput.onkeydown = function(e){
-			var key = e.keyCode;
-
-			if(key && key != KEY_ESC_KEYCODE && key != KEY_ENTER_KEYCODE) return
-
-			if(key == KEY_ESC_KEYCODE){
-				tempInput.returnSpan(false)
-			}
-				
-			if(key == KEY_ENTER_KEYCODE){ 
-				tempInput.returnSpan(true)
-			}
-		}
-
-		tempInput.returnSpan = function(newValue){
-			if(newValue != undefined){
-
-				if(this.type == 'date'){
-					this.relatedSpan.innerHTML = this.value.replace(/(\d*)?-(\d*)?-(\d*)/, '$3.$2.$1');
-
-					if(!this.value){
-						this.relatedSpan.classList.add(TASK_ITEM_DEADLINE_EMPTY_CLASS)
-					} else {
-						this.relatedSpan.classList.remove(TASK_ITEM_DEADLINE_EMPTY_CLASS)
-					}
-
-				} else {
-					if(!this.value){
-						var currentLi = tempInput.closest('li');
-						currentLi.remove()
-						return
-					} 
-
-					this.relatedSpan.innerHTML = this.value
-				}
-			} 		
-
-			this.parentNode.replaceChild(this.relatedSpan, this);
-		}
-
-		tempInput.checkMouseClickOut = function(e){
-			if(e.target != tempInput) tempInput.returnSpan(true)
-		}
-
-		tempInput.onfocus = function(e){
-			document.addEventListener('mousedown', tempInput.checkMouseClickOut)
-		}
-
-		tempInput.onblur = function(e){
-			document.removeEventListener('mousedown', tempInput.checkMouseClickOut)
-		}
-	///////////////////////////////////////////////////////////////////////////////////////////
-
-	// taskObj
+	// tasksObj
 	////////////////////////////////////////////////////////////////////////////
 
-	function itemEdit(span){
-		var startValue = span.innerHTML;
+	function initialize(domElem) {
+		var widgetHTML;
 
-		if(span.classList.contains(TASK_ITEM_TASK_CLASS)){
-			//task
-			tempInput.type = 'text'
-			tempInput.value = startValue;
+		if(!widget){
+			widget = domElem;
+			widgetHTML = templater(todoList_template)(todoListClasses);
+			domElem.innerHTML = widgetHTML;
+			domElem.classList.add(WRAPPER_CLASS);
 
-			tempInput.classList.remove(TASK_ITEM_TASK_EDIT_DEADLINE_CLASS)
-			tempInput.classList.add(TASK_ITEM_TASK_EDIT_TASK_CLASS)
+			widget_addTask = widget.getElementsByClassName(MAIN_INPUT_CLASS)[0];
+			widget_taskList = widget.getElementsByClassName(TASK_LIST_CLASS)[0];
+			widget_filters = widget.getElementsByClassName(FILTERS_CLASS)[0];
+			widget_infobar = widget.getElementsByClassName(INFOBAR_CLASS)[0];
+			widget_infobarRemain = widget.getElementsByClassName(INFOBAR_REMAIN_COUNT_CLASS)[0]
+			widget_infobarSelected = widget.getElementsByClassName(INFOBAR_SELECTED_CLASS)[0];
+			widget_infobarRemoveBtn = widget.getElementsByClassName(INFOBAR_REMOVE_BTN_CLASS)[0]
+			widget_noTasksMessage = widget.getElementsByClassName(NO_TASK_CLASS)[0];
 
-		} else {
-			//deadline
-			tempInput.type = 'date'
-			tempInput.value = startValue.replace(/(\d*)?\.(\d*)?\.(\d*)/, '$3-$2-$1');
-
-			tempInput.classList.remove(TASK_ITEM_TASK_EDIT_TASK_CLASS)
-			tempInput.classList.add(TASK_ITEM_TASK_EDIT_DEADLINE_CLASS)
+			addListeners();
 		}
-
-		tempInput.startValue = startValue;
-		tempInput.relatedSpan = span;
-
-		span.parentNode.replaceChild(tempInput, span);
-		tempInput.focus()
-	}
-
-	function addNewTask(task){
-		if(!widget_task_template){
-			widget_task_template = templater(todoList_task_item_template)(todoListItemClasses)
-		}
-
-		var taskLi = document.createElement('div');
-		taskLi.innerHTML = widget_task_template;
-		taskLi = taskLi.firstElementChild;
-		taskLi.getElementsByClassName(TASK_ITEM_TASK_CLASS)[0].textContent = task;
-		widget_taskList.appendChild(taskLi);
-
-		tasksObj.tasksCount++;
-	}
-
-	function clearTaskInput(){
-		widget_addTask.value = '';
 	}
 
 	function addListeners(){
 		if(!widget) return
+		///////////////////////////
 
+		///////////////////////////	
 		//listen enter & esc
+		//////////////////////////
 		widget_addTask.onkeydown = function(e){
 			var key = e.keyCode;
 
@@ -203,19 +129,25 @@ function TodoListModule(){
 				clearTaskInput()
 			}
 		}
+		///////////////////////////
 
+		///////////////////////////
 		//listen removebtn click
+		//////////////////////////
 		widget.addEventListener('click', e => {
 			var target = e.target;
 			if(target.classList && target.classList.contains(TASK_ITEM_REMOVE_TASK_CLASS)){
 				var currentLi = target.closest('li');
-				currentLi.remove();
+				//tasksObj.tasksCount--
+				removeTask(currentLi)
 
-				tasksObj.tasksCount--
 			}
 		})
+		///////////////////////////
 
+		///////////////////////////
 		//listen dblclick to edit
+		//////////////////////////
 		widget.addEventListener('click', e => {
 			var target = e.target;
 
@@ -232,8 +164,11 @@ function TodoListModule(){
 				itemEdit(target);
 			}
 		})
+		///////////////////////////
 
+		///////////////////////////
 		//filters
+		//////////////////////////
 		widget_filters.addEventListener('click', e => {
 			var target = e.target;
 			if(target.nodeName != 'LI') return
@@ -335,8 +270,11 @@ function TodoListModule(){
 				return false	
 			}
 		})
+		///////////////////////////
 
+		///////////////////////////
 		//checkbox
+		//////////////////////////
 		widget.addEventListener('click', e => {
 			var target = e.target,
 				li;
@@ -347,17 +285,26 @@ function TodoListModule(){
 
 			if(target.checked){
 				li.classList.add(TASK_ITEM_DONE_CLASS);
+				li.liDataObj.checked = true;
 				tasksObj.tasksSelected++;
 			} else {
 				li.classList.remove(TASK_ITEM_DONE_CLASS);
+				li.liDataObj.checked = false;
 				tasksObj.tasksSelected--;
 			}
 		})
+		///////////////////////////
 
+		///////////////////////////
 		//tasksObj and infobar
+		//////////////////////////
+		
 		makeChangeListening(tasksObj, 'tasksCount', widget_infobar);
 		makeChangeListening(tasksObj, 'tasksSelected', widget_infobar);
+		//makeChangeListening(tasksObj, 'tasks', widget_infobar);
+
 		widget_infobar.addEventListener('change', e => {
+			l(tasksObj)
 			var prop = e.detail.prop,
 				value = e.detail.value;
 
@@ -378,36 +325,156 @@ function TodoListModule(){
 		})
 
 		widget_infobarRemoveBtn.onclick = function(e){
-			tasksObj.tasksCount -= 	tasksObj.tasksSelected;
-			tasksObj.tasksSelected = 0;
-
 			[].slice.call(widget_taskList.getElementsByClassName(TASK_ITEM_DONE_CLASS)).forEach(li => {
-				li.remove()
+				removeTask(li)
 			})
 		}
 	}	
 
-	function initialize(domElem) {
-		var widgetHTML;
-
-		if(!widget){
-			widget = domElem;
-			widgetHTML = templater(todoList_template)(todoListClasses);
-			domElem.innerHTML = widgetHTML;
-			domElem.classList.add(WRAPPER_CLASS);
-
-			widget_addTask = widget.getElementsByClassName(MAIN_INPUT_CLASS)[0];
-			widget_taskList = widget.getElementsByClassName(TASK_LIST_CLASS)[0];
-			widget_filters = widget.getElementsByClassName(FILTERS_CLASS)[0];
-			widget_infobar = widget.getElementsByClassName(INFOBAR_CLASS)[0];
-			widget_infobarRemain = widget.getElementsByClassName(INFOBAR_REMAIN_CLASS)[0]
-			widget_infobarSelected = widget.getElementsByClassName(INFOBAR_SELECTED_CLASS)[0];
-			widget_infobarRemoveBtn = widget.getElementsByClassName(INFOBAR_REMOVE_BTN_CLASS)[0]
-			widget_noTasksMessage = widget.getElementsByClassName(NO_TASK_CLASS)[0];
-
-			addListeners();
+	function addNewTask(task, deadline, check){
+		if(!widget_task_template){
+			widget_task_template = templater(todoList_task_item_template)(todoListItemClasses)
 		}
+
+		var taskLi = document.createElement('div');
+		taskLi.innerHTML = widget_task_template;
+		taskLi = taskLi.firstElementChild;
+		taskLi.getElementsByClassName(TASK_ITEM_TASK_CLASS)[0].textContent = task;
+		taskLi.dataset.id = taskId++;
+
+
+		if(deadline){
+			var deadlineElement = taskLi.getElementsByClassName(TASK_ITEM_DEADLINE_CLASS)[0]
+			deadlineElement.textContent = deadline;
+			deadlineElement.classList.remove(TASK_ITEM_DEADLINE_EMPTY_CLASS)
+		}
+
+		widget_taskList.appendChild(taskLi);
+		tasksObj.tasksCount++;
+
+		if(check){
+			taskLi.getElementsByClassName(TASK_ITEM_CHECKBOX_CLASS)[0].click()
+		}
+
+
+		var liDataObj = {
+			id: taskLi.dataset.id,
+			task: task,
+			deadline: deadline,
+			checked: check ? true : false,
+			element: taskLi,
+		}
+		tasksObj.tasks[liDataObj.id] = liDataObj
+		taskLi.liDataObj = liDataObj
 	}
+
+	function removeTask(li){
+		var liDataObj = li.liDataObj;
+		if(liDataObj.checked) tasksObj.tasksSelected--;
+		tasksObj.tasksCount--;	
+
+		delete tasksObj.tasks[liDataObj.id]
+
+		li.remove()
+	}
+
+	function clearTaskInput(){
+		widget_addTask.value = '';
+	}
+
+
+	function itemEdit(span){
+		var startValue = span.innerHTML;
+
+		if(span.classList.contains(TASK_ITEM_TASK_CLASS)){
+			//task
+			tempInput.type = 'text'
+			tempInput.value = startValue;
+
+			tempInput.classList.remove(TASK_ITEM_TASK_EDIT_DEADLINE_CLASS)
+			tempInput.classList.add(TASK_ITEM_TASK_EDIT_TASK_CLASS)
+
+		} else {
+			//deadline
+			tempInput.type = 'date'
+			tempInput.value = startValue.replace(/(\d*)?\.(\d*)?\.(\d*)/, '$3-$2-$1');
+
+			tempInput.classList.remove(TASK_ITEM_TASK_EDIT_TASK_CLASS);
+			tempInput.classList.add(TASK_ITEM_TASK_EDIT_DEADLINE_CLASS);
+		}
+
+		tempInput.startValue = startValue;
+		tempInput.relatedSpan = span;
+
+		span.parentNode.replaceChild(tempInput, span);
+		tempInput.focus()
+	}
+
+	// tempInput
+		var tempInput = document.createElement('input');
+		tempInput.classList.add(TASK_ITEM_TASK_EDIT_CLASS)		
+
+		tempInput.onkeydown = function(e){
+			var key = e.keyCode;
+
+			if(key && key != KEY_ESC_KEYCODE && key != KEY_ENTER_KEYCODE) return
+
+			if(key == KEY_ESC_KEYCODE){
+				tempInput.returnSpan(false)
+			}
+				
+			if(key == KEY_ENTER_KEYCODE){ 
+				tempInput.returnSpan(true)
+			}
+		}
+
+		tempInput.returnSpan = function(newValue){
+			if(newValue !== false){
+
+				var currentLi = tempInput.closest('li');
+
+				if(this.type == 'date'){
+					//edit deadline 
+					var editedDate = this.value.replace(/(\d*)?-(\d*)?-(\d*)/, '$3.$2.$1');
+					this.relatedSpan.innerHTML = editedDate;
+					currentLi.liDataObj.deadline = editedDate;
+
+					if(!this.value){
+						this.relatedSpan.classList.add(TASK_ITEM_DEADLINE_EMPTY_CLASS)
+					} else {
+						this.relatedSpan.classList.remove(TASK_ITEM_DEADLINE_EMPTY_CLASS)
+					}
+
+				} else {
+					//edit task
+					if(!this.value){
+						currentLi.remove()
+						return
+					} 
+
+					this.relatedSpan.innerHTML = this.value
+					currentLi.liDataObj.task = this.value
+				}
+			} 		
+
+			this.parentNode.replaceChild(this.relatedSpan, this);
+		}
+
+		tempInput.onfocus = function(e){
+			document.addEventListener('mousedown', tempInput.checkMouseClickOut)
+		}
+
+		tempInput.onblur = function(e){
+			document.removeEventListener('mousedown', tempInput.checkMouseClickOut)
+		}
+
+		tempInput.checkMouseClickOut = function(e){
+			if(e.target != tempInput){
+				tempInput.returnSpan(true)
+			}
+		}
+	///////////////////////////////////////////////////////////////////////////////////////////
+	
 
 	//extra functions
 		function templater(html){
