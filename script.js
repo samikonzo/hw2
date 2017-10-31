@@ -3,9 +3,12 @@ var l = console.log;
 
 var todoList = new TodoListModule()
 todoList.init(document.getElementsByClassName('todoList-container')[0])
-
+var todoList2 = new TodoListModule()
+todoList2.init(document.getElementsByClassName('todoList-container')[1])
 
 function TodoListModule(){
+	if(!TodoListModule.count) TodoListModule.count = 0;
+
 	var widget, widget_task_template, widget_addTask, widget_taskList,
 		widget_filters,  widget_noTasksMessage,
 		widget_infobar, widget_infobarRemain, widget_infobarSelected, widget_infobarRemoveBtn,
@@ -86,11 +89,14 @@ function TodoListModule(){
 
 
 	// init, listener, edit
-		function initialize(domElem) {
+		function initialize(domElem, tasklistName) {
 			var widgetHTML;
+
+			tasklistName = tasklistName || ('undefined' + TodoListModule.count++);
 
 			if(!widget){
 				widget = domElem;
+				widget.name = tasklistName;
 				widgetHTML = templater(todoList_template)(todoListClasses);
 				domElem.innerHTML = widgetHTML;
 				domElem.classList.add(WRAPPER_CLASS);
@@ -341,14 +347,7 @@ function TodoListModule(){
 			///////////////////////////
 			//local tasks
 			//////////////////////////
-				var localTaskList = localStorage.getItem('taskList');
-				if(localTaskList){
-					var localTasks = JSON.parse(localTaskList)
-					for(var num in localTasks){
-						var task = localTasks[num]
-						addNewTask(task.task, task.deadline, task.checked)
-					}
-				}	
+			createTasksFromLocalStorage()		
 		}	
 
 		function addNewTask(task, deadline, check){
@@ -501,11 +500,22 @@ function TodoListModule(){
 	////////////////////////////////////////////////////////////////////////////
 
 	// Local Storage
+		function createTasksFromLocalStorage(){
+			var localTaskList = localStorage.getItem('taskList_' + widget.name);
+			if(localTaskList){
+				var localTasks = JSON.parse(localTaskList)
+				for(var num in localTasks){
+					var task = localTasks[num]
+					addNewTask(task.task, task.deadline, task.checked)
+				}
+			}
+		}
+
 		function refreshLocalStorage(){
 			var tasks = tasksObj.tasks,
 				tempObj = {};
 
-			localStorage.removeItem('taskList');	
+			localStorage.removeItem('taskList_' + widget.name);	
 
 			for(var prop in tasks){
 				tempObj[prop] = {};
@@ -516,7 +526,7 @@ function TodoListModule(){
 			}
 
 			var serialTasks = JSON.stringify(tempObj)
-			localStorage.setItem('taskList', serialTasks);
+			localStorage.setItem('taskList_' + widget.name, serialTasks);
 		}
 	////////////////////////////////////////////////////////////////////////////
 
