@@ -7,7 +7,7 @@ html, body {
 
 
 .todolist-wrapper{
-  width: 500px;
+  width: 700px;
   margin: 50px auto;
   padding: 20px 20px 0 20px;
   background:  white;
@@ -23,7 +23,7 @@ html, body {
 
 .addTask{
   display: block;
-  width: 460px;
+  width: 660px;
   margin: 20px auto 0;
   padding: 5px 10px;
   box-sizing: border-box;
@@ -33,7 +33,7 @@ html, body {
 .taskList{
   display: block;
   margin: 20px auto 5px;
-  width: 460px;
+  width: 660px;
   border: 1px dashed red;
   position: relative;
   list-style-type: none;
@@ -46,7 +46,7 @@ html, body {
 
   min-height: 30px;
   max-height: 999px;
-  width: 460px;
+  width: 660px;
   padding: 0 10px;
   margin: 0;
   left: 0;
@@ -129,8 +129,8 @@ html, body {
 /*------------------TASK ITEM---------------------*/
   .task-item__task{
     display: inline-block;
-    width: 250px;
-    max-width: 220px;
+    width: 520px;
+    max-width: 520px;
     min-height: 40px;
     border:1px dashed red;
     word-wrap: break-word;

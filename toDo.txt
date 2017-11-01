@@ -1,0 +1,23 @@
+1. Local Storage
+	1.1 Creating of lists without script.js
+		1.1.1 if no localstorage -> add empty list
+		1.1.2 else -> add from storage
+	1.2 save previous localstorage for undo
+
+
+2. Editing
+	2.1 remove input, add textarea
+	2.2 split editing task and deadline
+	2.3 add editing of todolistname and change name in local storage
+
+3. New elements
+	3.1 collapse button
+	3.2 remove list button
+	3.3 add new list button
+
+4. Style
+	4.1 deadline -> small rectangle under checkbox
+	4.2 remove-task-buttom to right top
+	
+
+

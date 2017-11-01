@@ -79,7 +79,6 @@ function TodolistModule(){
 		}	
 	////////////////////////////////////////////////////////////////////////////
 
-
 	// init, listener, edit
 		function initialize(domElem, tasklistName) {
 			var widgetHTML;
@@ -109,16 +108,7 @@ function TodolistModule(){
 		function addListeners(){
 			if(!widget) return
 			///////////////////////////
-
-			///////////////////////////	
-			//widget tasks change event
-			//////////////////////////
-				widget.addEventListener('change', e => {
-					if(!e.detail) return
-					if(e.target != e.currentTarget) return	
-					refreshLocalStorage()
-				})
-			///////////////////////////			
+		
 
 			///////////////////////////	
 			//listen enter & esc
@@ -337,9 +327,18 @@ function TodolistModule(){
 
 
 			///////////////////////////
-			//local tasks
+			//local storage
 			//////////////////////////
-			createTasksFromLocalStorage()		
+
+				//listen changing
+				widget.addEventListener('change', e => {
+					if(!e.detail) return
+					if(e.target != e.currentTarget) return	
+					refreshLocalStorage()
+				})
+
+				createTasksFromLocalStorage()	
+			///////////////////////////		
 		}	
 
 		function addNewTask(task, deadline, check){
