@@ -5,21 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <link rel="stylesheet" href="style.css">
+  <script src="todolistModule.js" defer></script>
   <script src="script.js" defer></script>
   <title>Todo List</title>
 </head>
+
 <body>
 
-  <div class="todoList-container">
+  <div class="todolist-container">
   </div>
 
-  <div class="todoList-container">
+  <div class="todolist-container">
   </div>
 
 
 </body>
 
-  <script type="text/template" id="todoList-template">
+  <script type="text/template" id="todolist-template">
       <p class="{{ TODOLIST_NAME_CLASS }}"> TODOLISTNAME </p>
 
       <input type="text" class="{{ MAIN_INPUT_CLASS }}" autofocus placeholder="what needs to be done?">
@@ -45,7 +47,7 @@
       </div>
   </script>
 
-  <script type="text/template" id="todoList-task-item-template">
+  <script type="text/template" id="todolist-task-item-template">
     <li class="{{ TASK_ITEM_CLASS }}">
       <label class="{{ TASK_ITEM_CHECKBOX_LABEL_CLASS }}"> <input type="checkbox" name="" class="{{ TASK_ITEM_CHECKBOX_CLASS }}"> </label>
       <span class="{{ TASK_ITEM_TASK_CLASS }}"></span>
