@@ -21,8 +21,6 @@ function TodolistModule(){
 		          <li class="{{ FILTERS_ITEM_CLASS }}" value="week">week</li>
 		        </ul>
 		     
-		      <div class="{{ NO_TASK_CLASS }} {{ NO_TASK_HIDDEN_CLASS }}"> Нет заданий удовлетворяющих требованию </div>
-
 		      <ul class="{{ TASK_LIST_CLASS }}">
 		      </ul>
 
@@ -31,7 +29,9 @@ function TodolistModule(){
 		          remaining events:<span class="{{ INFOBAR_REMAIN_COUNT_CLASS }}"></span>
 		        </div>
 		        <button class="{{ INFOBAR_REMOVE_BTN_CLASS }} {{ INFOBAR_REMOVE_BTN_HIDDEN_CLASS }}">done: <span class="{{ INFOBAR_SELECTED_CLASS }} {{ INFOBAR_SPARE_CLASS}}">0</span> | remove it </button>
+		        <div class="{{ NO_TASK_CLASS }} {{ NO_TASK_HIDDEN_CLASS }}"> Нет заданий удовлетворяющих требованию </div>
 		      </div>`,
+
 	      	listItemHTML = `<li class="{{ TASK_ITEM_CLASS }}">
 			      <label class="{{ TASK_ITEM_CHECKBOX_LABEL_CLASS }}"> <input type="checkbox" name="" class="{{ TASK_ITEM_CHECKBOX_CLASS }}"> </label>
 			      <span class="{{ TASK_ITEM_TASK_CLASS }}"></span>
@@ -127,6 +127,8 @@ function TodolistModule(){
 
 	// init, listener, edit
 		function initialize(domElem, tasklistName) {
+			if(!domElem) return
+
 			var widgetHTML;
 
 			tasklistName = tasklistName || ('undefined' + TodolistModule.count++);
@@ -217,100 +219,112 @@ function TodolistModule(){
 					if(target.classList && target.classList.contains(FILTERS_ITEM_SELECTED_CLASS)) return
 
 					//replace class --selected
-					widget_filters.getElementsByClassName(FILTERS_ITEM_SELECTED_CLASS)[0].classList.remove(FILTERS_ITEM_SELECTED_CLASS);
-					target.classList.add(FILTERS_ITEM_SELECTED_CLASS);
+						widget_filters.getElementsByClassName(FILTERS_ITEM_SELECTED_CLASS)[0].classList.remove(FILTERS_ITEM_SELECTED_CLASS);
+						target.classList.add(FILTERS_ITEM_SELECTED_CLASS);
 
 					//change block value 
-					var selector = target.getAttribute('value');
-					widget_filters.setAttribute('value', selector)
+						var selector = target.getAttribute('value');
+						widget_filters.setAttribute('value', selector)
 
 					//switch selected
-					var items = widget_taskList.getElementsByClassName(TASK_ITEM_CLASS);
-					switch(selector){
-						case 'all' : 
-							[].forEach.call(items, el => {
-								el.classList.remove(TASK_ITEM_HIDDEN_CLASS);
-							})
-							break;
-
-						case 'done' : 
-							[].forEach.call(items, el => {
-								if(el.classList.contains(TASK_ITEM_DONE_CLASS)){
-									el.classList.remove(TASK_ITEM_HIDDEN_CLASS)
-								} else {
-									el.classList.add(TASK_ITEM_HIDDEN_CLASS)
-								}
-							})
-							break;
-
-						case 'not-done' : 
-							[].forEach.call(items, el => {
-								if(!el.classList.contains(TASK_ITEM_DONE_CLASS)){
-									el.classList.remove(TASK_ITEM_HIDDEN_CLASS)
-								} else {
-									el.classList.add(TASK_ITEM_HIDDEN_CLASS)
-								}
-							})
-							break;
-
-						case 'tomorrow' : 
-							[].forEach.call(items, el => {
-								var tomorrow = new Date();
-								tomorrow.setDate(tomorrow.getDate() + 1);
-								tomorrow.setHours(0,0,0,0);
-
-								var deadline = el.getElementsByClassName(TASK_ITEM_DEADLINE_CLASS)[0].innerHTML,
-									deadlineDate = new Date( deadline.replace(/(\d*)?\.(\d*)?\.(\d*)/, '$3 $2 $1') );
-
-								if(deadlineDate.getTime() == tomorrow.getTime()){
+						var items = widget_taskList.getElementsByClassName(TASK_ITEM_CLASS);
+						switch(selector){
+							case 'all' : 
+								[].forEach.call(items, el => {
 									el.classList.remove(TASK_ITEM_HIDDEN_CLASS);
-								} else {
-									el.classList.add(TASK_ITEM_HIDDEN_CLASS)
-								}
-							})
-							break;
+									expandItem(el)
+								})
+								break;
 
-						case 'week' : 
-							[].forEach.call(items, el => {
-								var deadline = el.getElementsByClassName(TASK_ITEM_DEADLINE_CLASS)[0].innerHTML,
-									deadlineDate = new Date( deadline.replace(/(\d*)?\.(\d*)?\.(\d*)/, '$3 $2 $1') );
+							case 'done' : 
+								[].forEach.call(items, el => {
+									if(el.classList.contains(TASK_ITEM_DONE_CLASS)){
+										el.classList.remove(TASK_ITEM_HIDDEN_CLASS)
+										expandItem(el)
+									} else {
+										el.classList.add(TASK_ITEM_HIDDEN_CLASS)
+										collapseItem(el)
+									}
+								})
+								break;
 
-								if(isThisWeek(deadlineDate)){
-									el.classList.remove(TASK_ITEM_HIDDEN_CLASS);
-								} else {
-									el.classList.add(TASK_ITEM_HIDDEN_CLASS)
-								}
-							})
-							break;
-					}
+							case 'not-done' : 
+								[].forEach.call(items, el => {
+									if(!el.classList.contains(TASK_ITEM_DONE_CLASS)){
+										el.classList.remove(TASK_ITEM_HIDDEN_CLASS)
+										expandItem(el)
+									} else {
+										el.classList.add(TASK_ITEM_HIDDEN_CLASS)
+										collapseItem(el)
+									}
+								})
+								break;
+
+							case 'tomorrow' : 
+								[].forEach.call(items, el => {
+									var tomorrow = new Date();
+									tomorrow.setDate(tomorrow.getDate() + 1);
+									tomorrow.setHours(0,0,0,0);
+
+									var deadline = el.getElementsByClassName(TASK_ITEM_DEADLINE_CLASS)[0].innerHTML,
+										deadlineDate = new Date( deadline.replace(/(\d*)?\.(\d*)?\.(\d*)/, '$3 $2 $1') );
+
+									if(deadlineDate.getTime() == tomorrow.getTime()){
+										el.classList.remove(TASK_ITEM_HIDDEN_CLASS);
+										expandItem(el)
+									} else {
+										el.classList.add(TASK_ITEM_HIDDEN_CLASS)
+										collapseItem(el)
+									}
+								})
+								break;
+
+							case 'week' : 
+								[].forEach.call(items, el => {
+									var deadline = el.getElementsByClassName(TASK_ITEM_DEADLINE_CLASS)[0].innerHTML,
+										deadlineDate = new Date( deadline.replace(/(\d*)?\.(\d*)?\.(\d*)/, '$3 $2 $1') );
+
+									if(isThisWeek(deadlineDate)){
+										el.classList.remove(TASK_ITEM_HIDDEN_CLASS);
+										expandItem(el)
+									} else {
+										el.classList.add(TASK_ITEM_HIDDEN_CLASS)
+										collapseItem(el)
+									}
+								})
+								break;
+						}
 
 					//visible count
-					var visibleCount = widget_taskList.querySelectorAll('.' + TASK_ITEM_CLASS + ':not(.' + TASK_ITEM_HIDDEN_CLASS + ')').length;
-					//l('visibleCount : ', visibleCount)
-					if(!visibleCount){
-						widget_noTasksMessage.classList.remove(NO_TASK_HIDDEN_CLASS)
-					} else {
-						widget_noTasksMessage.classList.add(NO_TASK_HIDDEN_CLASS)
-					}
+						var visibleCount = widget_taskList.querySelectorAll('.' + TASK_ITEM_CLASS + ':not(.' + TASK_ITEM_HIDDEN_CLASS + ')').length;
+						//l('visibleCount : ', visibleCount)
+						if(!visibleCount){
+							widget_noTasksMessage.classList.remove(NO_TASK_HIDDEN_CLASS)
+						} else {
+							widget_noTasksMessage.classList.add(NO_TASK_HIDDEN_CLASS)
+						}
 
 					//extra func
-					function isThisWeek(date){
-						var today = new Date(),
-							dayNum = today.getDay(),
-							thisWeekMinDate = new Date(),
-							thisWeekMaxDate = new Date();
+						//check is the date at current week
+						function isThisWeek(date){
+							var today = new Date(),
+								dayNum = today.getDay(),
+								thisWeekMinDate = new Date(),
+								thisWeekMaxDate = new Date();
 
-						dayNum = dayNum == 0 ? 6 : dayNum - 1;
-						thisWeekMinDate.setDate(today.getDate() - dayNum);
-						thisWeekMinDate.setHours(0,0,0,0);
-						thisWeekMaxDate.setDate(today.getDate() + (6 - dayNum));
-						thisWeekMaxDate.setHours(0,0,0,0);
+							dayNum = dayNum == 0 ? 6 : dayNum - 1;
+							thisWeekMinDate.setDate(today.getDate() - dayNum);
+							thisWeekMinDate.setHours(0,0,0,0);
+							thisWeekMaxDate.setDate(today.getDate() + (6 - dayNum));
+							thisWeekMaxDate.setHours(0,0,0,0);
+							
+							if(date.getTime() >= thisWeekMinDate.getTime() &&
+								date.getTime() <= thisWeekMaxDate.getTime()) return true
+
+							return false	
+						}
+
 						
-						if(date.getTime() >= thisWeekMinDate.getTime() &&
-							date.getTime() <= thisWeekMaxDate.getTime()) return true
-
-						return false	
-					}
 				})
 			///////////////////////////
 
@@ -417,7 +431,6 @@ function TodolistModule(){
 			}
 
 
-
 			tasksObj.tasks[liDataObj.id] = liDataObj
 			makeAllPropsChangeListening(tasksObj.tasks[liDataObj.id], widget);
 			taskLi.liDataObj = liDataObj
@@ -436,7 +449,12 @@ function TodolistModule(){
 			delete tasksObj.tasks[liDataObj.id]
 			refreshLocalStorage()
 
-			li.remove()
+			
+			collapseItem(li);
+			setTimeout( function(){
+				li.remove()
+			},500)			
+
 		}
 
 		function clearTaskInput(){
@@ -468,6 +486,30 @@ function TodolistModule(){
 
 			span.parentNode.replaceChild(tempInput, span);
 			tempInput.focus()
+		}
+
+		//collapse item
+		function collapseItem(item){
+			//check fullHeight for not 
+			if(item.fullHeight != undefined) return
+
+			if(!item.style.maxHeight){
+				item.style.maxHeight = item.offsetHeight + 'px';
+			}	
+
+			setTimeout(function(){
+				item.fullHeight = item.offsetHeight;
+				item.style.maxHeight = 0;
+			},10)
+		}
+		
+		//expand item
+		function expandItem(item){
+			item.style.maxHeight = item.fullHeight + 'px';
+			setTimeout(function(){
+				item.style.maxHeight = null;
+			}, 500)
+			delete item.fullHeight
 		}
 	////////////////////////////////////////////////////////////////////////////
 

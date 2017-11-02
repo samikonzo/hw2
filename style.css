@@ -38,14 +38,18 @@ html, body {
   position: relative;
   list-style-type: none;
   padding: 0;
+  /* max-height: 0px; */
+  overflow: hidden;
+
+  transition: .7s;
 }
 
 .task-item{
   position: relative;
   border: 1px solid blue;
 
-  min-height: 30px;
-  max-height: 999px;
+  /* min-height: 30px;
+  max-height: 999px; */
   width: 660px;
   padding: 0 10px;
   margin: 0;
@@ -57,15 +61,18 @@ html, body {
   flex-flow: row nowrap;
   align-items: center;
   align-content: stretch; 
-
+  
+  opacity: 1;
   overflow: hidden;
   transition: .5s linear;
   box-sizing: border-box;
 }
 .task-item--hidden{
-  display:  none;
+  /* display:  none; 
   min-height: 0px;
-  max-height:  0px;
+  max-height:  0px; */
+  background:  green;
+  opacity:  0;
 }
 
 /*------------------CHECKBOX---------------------*/

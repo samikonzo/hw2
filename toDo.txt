@@ -13,7 +13,13 @@
 
 4. Style
 	4.1 deadline -> small rectangle under checkbox
-	4.2 remove-task-buttom to right top
+	4.2 remove-task-button to right top
+
+5. Function
+	5.1 make list expand and collapse
+	5.2 make list slow collapse when task deleted
+	5.3 filter slow change height
+
 	
 
 
