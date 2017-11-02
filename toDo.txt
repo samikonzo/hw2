@@ -10,10 +10,6 @@
 	2.2 split editing task and deadline
 	2.3 add editing of todolistname and change name in local storage
 
-3. New elements
-	3.1 collapse button
-	3.2 remove list button
-	3.3 add new list button
 
 4. Style
 	4.1 deadline -> small rectangle under checkbox

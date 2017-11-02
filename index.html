@@ -24,39 +24,4 @@
 
 </body>
 
-  <script type="text/template" id="todolist-template">
-      <p class="{{ TODOLIST_NAME_CLASS }}"> TODOLISTNAME </p>
-
-      <input type="text" class="{{ MAIN_INPUT_CLASS }}" autofocus placeholder="what needs to be done?">
-
-      <ul class="{{ FILTERS_CLASS }}"> 
-          <li class="{{ FILTERS_ITEM_CLASS }}  {{ FILTERS_ITEM_SELECTED_CLASS }}" value="all">all</li>
-          <li class="{{ FILTERS_ITEM_CLASS }}" value="done">done</li>
-          <li class="{{ FILTERS_ITEM_CLASS }}" value="not-done">not done</li>
-          <li class="{{ FILTERS_ITEM_CLASS }}" value="tomorrow">tomorrow</li>
-          <li class="{{ FILTERS_ITEM_CLASS }}" value="week">week</li>
-        </ul>
-     
-      <div class="{{ NO_TASK_CLASS }} {{ NO_TASK_HIDDEN_CLASS }}"> Нет заданий удовлетворяющих требованию </div>
-
-      <ul class="{{ TASK_LIST_CLASS }}">
-      </ul>
-
-      <div class="{{ INFOBAR_CLASS }} {{ INFOBAR_HIDDEN_CLASS }}">
-        <div class="{{ INFOBAR_REMAIN_CLASS }}">
-          remaining events:<span class="{{ INFOBAR_REMAIN_COUNT_CLASS }}"></span>
-        </div>
-        <button class="{{ INFOBAR_REMOVE_BTN_CLASS }} {{ INFOBAR_REMOVE_BTN_HIDDEN_CLASS }}">done: <span class="{{ INFOBAR_SELECTED_CLASS }} {{ INFOBAR_SPARE_CLASS}}">0</span> | remove it </button>
-      </div>
-  </script>
-
-  <script type="text/template" id="todolist-task-item-template">
-    <li class="{{ TASK_ITEM_CLASS }}">
-      <label class="{{ TASK_ITEM_CHECKBOX_LABEL_CLASS }}"> <input type="checkbox" name="" class="{{ TASK_ITEM_CHECKBOX_CLASS }}"> </label>
-      <span class="{{ TASK_ITEM_TASK_CLASS }}"></span>
-      <span class="{{ TASK_ITEM_DEADLINE_CLASS }} {{ TASK_ITEM_DEADLINE_EMPTY_CLASS }} {{ NO_SELECT_CLASS }}"></span> 
-      <button class="{{ TASK_ITEM_REMOVE_TASK_CLASS }} {{ TASK_ITEM_REMOVE_TASK_HIDDEN_CLASS }}">X</button>
-    </li>
-  </script>
-
 </html>

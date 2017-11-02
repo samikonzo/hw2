@@ -1,21 +1,67 @@
 function TodolistModule(){
 	if(!TodolistModule.count) TodolistModule.count = 0;
 
-	var widget, widget_task_template, widget_addTask, widget_taskList,
-		widget_filters,  widget_noTasksMessage,
-		widget_infobar, widget_infobarRemain, widget_infobarSelected, widget_infobarRemoveBtn,
-		tasksObj = {tasksCount : 0,	tasksSelected : 0, tasks : {}},
-		taskId = 0,
-		todolist_template = document.getElementById('todolist-template').innerHTML,
-		todolist_task_item_template = document.getElementById('todolist-task-item-template').innerHTML,
-		tempInput;
+	// templates
+		var listHTML = `<p class="{{ TODOLIST_NAME_CLASS }}"> TODOLISTNAME </p>
 
-	const KEY_ENTER_KEYCODE = 13,
-		  KEY_ESC_KEYCODE = 27;	
+		      <button class="{{ COLLAPSE_BUTTON }}"> collapse / expand</button>
+
+		      <ul class="{{ MENU }}"> menu
+		        <li class="{{ MENU_ITEM }}"> <button class="{{ ADD_TODOLIST }}"> ADD NEW TODOLIST</button></li>
+		        <li class="{{ MENU_ITEM }}"> <button class="{{ REMOVE_TODOLIST }}"> REMOVE CURRENT TODOLIST</button></li>
+		      </ul>
+
+		      <input type="text" class="{{ MAIN_INPUT_CLASS }}" autofocus placeholder="what needs to be done?">
+
+		      <ul class="{{ FILTERS_CLASS }}"> 
+		          <li class="{{ FILTERS_ITEM_CLASS }}  {{ FILTERS_ITEM_SELECTED_CLASS }}" value="all">all</li>
+		          <li class="{{ FILTERS_ITEM_CLASS }}" value="done">done</li>
+		          <li class="{{ FILTERS_ITEM_CLASS }}" value="not-done">not done</li>
+		          <li class="{{ FILTERS_ITEM_CLASS }}" value="tomorrow">tomorrow</li>
+		          <li class="{{ FILTERS_ITEM_CLASS }}" value="week">week</li>
+		        </ul>
+		     
+		      <div class="{{ NO_TASK_CLASS }} {{ NO_TASK_HIDDEN_CLASS }}"> Нет заданий удовлетворяющих требованию </div>
+
+		      <ul class="{{ TASK_LIST_CLASS }}">
+		      </ul>
+
+		      <div class="{{ INFOBAR_CLASS }} {{ INFOBAR_HIDDEN_CLASS }}">
+		        <div class="{{ INFOBAR_REMAIN_CLASS }}">
+		          remaining events:<span class="{{ INFOBAR_REMAIN_COUNT_CLASS }}"></span>
+		        </div>
+		        <button class="{{ INFOBAR_REMOVE_BTN_CLASS }} {{ INFOBAR_REMOVE_BTN_HIDDEN_CLASS }}">done: <span class="{{ INFOBAR_SELECTED_CLASS }} {{ INFOBAR_SPARE_CLASS}}">0</span> | remove it </button>
+		      </div>`,
+	      	listItemHTML = `<li class="{{ TASK_ITEM_CLASS }}">
+			      <label class="{{ TASK_ITEM_CHECKBOX_LABEL_CLASS }}"> <input type="checkbox" name="" class="{{ TASK_ITEM_CHECKBOX_CLASS }}"> </label>
+			      <span class="{{ TASK_ITEM_TASK_CLASS }}"></span>
+			      <span class="{{ TASK_ITEM_DEADLINE_CLASS }} {{ TASK_ITEM_DEADLINE_EMPTY_CLASS }} {{ NO_SELECT_CLASS }}"></span> 
+			      <button class="{{ TASK_ITEM_REMOVE_TASK_CLASS }} {{ TASK_ITEM_REMOVE_TASK_HIDDEN_CLASS }}">X</button>
+			    </li>`;
+	////////////////////////////////////////////////////////////////////////////
+
+	// variables
+		var widget, widget_task_template, widget_addTask, widget_taskList,
+			widget_filters,  widget_noTasksMessage,
+			widget_infobar, widget_infobarRemain, widget_infobarSelected, widget_infobarRemoveBtn,
+			tasksObj = {tasksCount : 0,	tasksSelected : 0, tasks : {}},
+			taskId = 0,
+			todolist_template = listHTML,//document.getElementById('todolist-template').innerHTML,
+			todolist_task_item_template = listItemHTML,//document.getElementById('todolist-task-item-template').innerHTML,
+			tempInput;
+
+		const KEY_ENTER_KEYCODE = 13,
+			  KEY_ESC_KEYCODE = 27;	
+	////////////////////////////////////////////////////////////////////////////
 
 	// classes
 		const WRAPPER_CLASS = 'todolist-wrapper',
 			TODOLIST_NAME_CLASS = 'todolist-name',
+			COLLAPSE_BUTTON = '',
+			MENU = '',
+			MENU_ITEM = '',
+			ADD_TODOLIST = '',
+			REMOVE_TODOLIST = '',
 			MAIN_INPUT_CLASS = 'addTask',
 			FILTERS_CLASS = 'filters',
 			FILTERS_ITEM_CLASS = 'filters__item',
@@ -567,7 +613,6 @@ function TodolistModule(){
 		}
 	////////////////////////////////////////////////////////////////////////////
 	
-
 	//public metods
 		this.init = initialize
 }
