@@ -419,7 +419,14 @@ function TodolistModule(){
 				deadlineElement.classList.remove(TASK_ITEM_DEADLINE_EMPTY_CLASS)
 			}
 
+			taskLi.classList.add(TASK_ITEM_HIDDEN_CLASS);
 			widget_taskList.appendChild(taskLi);
+			//collapseItem(taskLi)
+
+			setTimeout(function(){
+				taskLi.classList.remove(TASK_ITEM_HIDDEN_CLASS);
+			}, 10)
+			
 			tasksObj.tasksCount++;
 
 			var liDataObj = {
@@ -429,7 +436,6 @@ function TodolistModule(){
 				checked: check ? true : false,
 				element: taskLi,
 			}
-
 
 			tasksObj.tasks[liDataObj.id] = liDataObj
 			makeAllPropsChangeListening(tasksObj.tasks[liDataObj.id], widget);
@@ -488,7 +494,7 @@ function TodolistModule(){
 			tempInput.focus()
 		}
 
-		//collapse item
+		//collapseItem
 		function collapseItem(item){
 			//check fullHeight for not 
 			if(item.fullHeight != undefined) return
@@ -503,7 +509,7 @@ function TodolistModule(){
 			},10)
 		}
 		
-		//expand item
+		//expandItem
 		function expandItem(item){
 			item.style.maxHeight = item.fullHeight + 'px';
 			setTimeout(function(){
