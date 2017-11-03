@@ -2,7 +2,7 @@ function TodolistModule(){
 	if(!TodolistModule.count) TodolistModule.count = 0;
 
 	// templates
-		var listHTML = `<p class="{{ TODOLIST_NAME_CLASS }}"> TODOLISTNAME </p>
+		var listHTML = `<p class="{{ TODOLIST_NAME_CLASS }} {{ EDITABLE_CLASS }}"> TODOLISTNAME </p>
 
 		      <button class="{{ COLLAPSE_BUTTON }}"> collapse / expand</button>
 
@@ -34,14 +34,22 @@ function TodolistModule(){
 
 	      	listItemHTML = `<li class="{{ TASK_ITEM_CLASS }}">
 			      <label class="{{ TASK_ITEM_CHECKBOX_LABEL_CLASS }}"> <input type="checkbox" name="" class="{{ TASK_ITEM_CHECKBOX_CLASS }}"> </label>
-			      <span class="{{ TASK_ITEM_TASK_CLASS }}"></span>
-			      <span class="{{ TASK_ITEM_DEADLINE_CLASS }} {{ TASK_ITEM_DEADLINE_EMPTY_CLASS }} {{ NO_SELECT_CLASS }}"></span> 
+			      <span class="{{ TASK_ITEM_TASK_CLASS }} {{ EDITABLE_CLASS }}"></span>
+			      <span class="{{ TASK_ITEM_DEADLINE_CLASS }} {{ TASK_ITEM_DEADLINE_EMPTY_CLASS }} {{ NO_SELECT_CLASS }}  {{ EDITABLE_CLASS }}"></span> 
 			      <button class="{{ TASK_ITEM_REMOVE_TASK_CLASS }} {{ TASK_ITEM_REMOVE_TASK_HIDDEN_CLASS }}">X</button>
 			    </li>`;
+
+		listItemHTML = `<li class="{{ TASK_ITEM_CLASS }}">
+			      <label class="{{ TASK_ITEM_CHECKBOX_LABEL_CLASS }}"> <input type="checkbox" name="" class="{{ TASK_ITEM_CHECKBOX_CLASS }}"> </label>
+			      <textarea class="{{ TASK_ITEM_TASK_CLASS }} {{ EDITABLE_CLASS }}" readonly></textarea>
+			      <span class="{{ TASK_ITEM_DEADLINE_CLASS }} {{ TASK_ITEM_DEADLINE_EMPTY_CLASS }} {{ NO_SELECT_CLASS }}  {{ EDITABLE_CLASS }}"></span> 
+			      <button class="{{ TASK_ITEM_REMOVE_TASK_CLASS }} {{ TASK_ITEM_REMOVE_TASK_HIDDEN_CLASS }}">X</button>
+			    </li>`;	    
 	////////////////////////////////////////////////////////////////////////////
 
 	// variables
 		var widget, widget_task_template, widget_addTask, widget_taskList,
+			widget_name, widget_collapseBtn,
 			widget_filters,  widget_noTasksMessage,
 			widget_infobar, widget_infobarRemain, widget_infobarSelected, widget_infobarRemoveBtn,
 			tasksObj = {tasksCount : 0,	tasksSelected : 0, tasks : {}},
@@ -57,8 +65,8 @@ function TodolistModule(){
 	// classes
 		const WRAPPER_CLASS = 'todolist-wrapper',
 			TODOLIST_NAME_CLASS = 'todolist-name',
-			COLLAPSE_BUTTON = '',
-			MENU = '',
+			COLLAPSE_BUTTON = 'todolist__collapse-btn',
+			MENU = 'todolist',
 			MENU_ITEM = '',
 			ADD_TODOLIST = '',
 			REMOVE_TODOLIST = '',
@@ -81,19 +89,24 @@ function TodolistModule(){
 			TASK_ITEM_HIDDEN_CLASS = 'task-item--hidden',
 			TASK_ITEM_CHECKBOX_LABEL_CLASS = 'task-item__checkbox-label',
 			TASK_ITEM_CHECKBOX_CLASS = 'task-item__checkbox',
-			TASK_ITEM_TASK_CLASS= 'task-item__task',
+			TASK_ITEM_TASK_CLASS = 'task-item__task',
+			TASK_ITEM_TASK_EDIT_CLASS = 'task-item__task--edit',
 			TASK_ITEM_DEADLINE_CLASS = 'task-item__deadline',
 			TASK_ITEM_DEADLINE_EMPTY_CLASS = 'task-item__deadline--empty',
+			TASK_ITEM_DEADLINE_EDIT_CLASS = 'task-item__deadline--edit',
 			TASK_ITEM_REMOVE_TASK_CLASS = 'task-item__removeTask',
 			TASK_ITEM_REMOVE_TASK_HIDDEN_CLASS = 'task-item__removeTask--hidden',
-			TASK_ITEM_TASK_EDIT_CLASS = 'task-item__task-edit',
-			TASK_ITEM_TASK_EDIT_TASK_CLASS = 'task-item__task-edit--task',
-			TASK_ITEM_TASK_EDIT_DEADLINE_CLASS = 'task-item__task-edit--deadline',
-			NO_SELECT_CLASS = 'noselect';
+			NO_SELECT_CLASS = 'noselect',
+			EDITABLE_CLASS = 'editable';
 
 		const todolistClasses = {
 			WRAPPER_CLASS : WRAPPER_CLASS ,
 			TODOLIST_NAME_CLASS : TODOLIST_NAME_CLASS ,
+			COLLAPSE_BUTTON : COLLAPSE_BUTTON,
+			MENU : MENU,
+			MENU_ITEM : MENU_ITEM,
+			ADD_TODOLIST : ADD_TODOLIST,
+			REMOVE_TODOLIST : REMOVE_TODOLIST,
 			MAIN_INPUT_CLASS : MAIN_INPUT_CLASS ,
 			FILTERS_CLASS : FILTERS_CLASS ,
 			FILTERS_ITEM_CLASS : FILTERS_ITEM_CLASS ,
@@ -107,21 +120,24 @@ function TodolistModule(){
 			INFOBAR_REMOVE_BTN_CLASS : INFOBAR_REMOVE_BTN_CLASS ,
 			INFOBAR_REMOVE_BTN_HIDDEN_CLASS : INFOBAR_REMOVE_BTN_HIDDEN_CLASS ,
 			INFOBAR_SELECTED_CLASS : INFOBAR_SELECTED_CLASS ,
+			EDITABLE_CLASS: EDITABLE_CLASS,
 		}
 		
 		const todolistItemClasses = {
 			TASK_ITEM_CLASS : TASK_ITEM_CLASS,
+			TASK_ITEM_DONE_CLASS : TASK_ITEM_DONE_CLASS,
+			TASK_ITEM_HIDDEN_CLASS : TASK_ITEM_HIDDEN_CLASS,
 			TASK_ITEM_CHECKBOX_LABEL_CLASS : TASK_ITEM_CHECKBOX_LABEL_CLASS,
 			TASK_ITEM_CHECKBOX_CLASS : TASK_ITEM_CHECKBOX_CLASS,
-			TASK_ITEM_TASK_CLASS: TASK_ITEM_TASK_CLASS,
+			TASK_ITEM_TASK_CLASS : TASK_ITEM_TASK_CLASS,
+			TASK_ITEM_TASK_EDIT_CLASS : TASK_ITEM_TASK_EDIT_CLASS,
 			TASK_ITEM_DEADLINE_CLASS : TASK_ITEM_DEADLINE_CLASS,
 			TASK_ITEM_DEADLINE_EMPTY_CLASS : TASK_ITEM_DEADLINE_EMPTY_CLASS,
+			TASK_ITEM_DEADLINE_EDIT_CLASS : TASK_ITEM_DEADLINE_EDIT_CLASS,
 			TASK_ITEM_REMOVE_TASK_CLASS : TASK_ITEM_REMOVE_TASK_CLASS,
 			TASK_ITEM_REMOVE_TASK_HIDDEN_CLASS : TASK_ITEM_REMOVE_TASK_HIDDEN_CLASS,
-			TASK_ITEM_TASK_EDIT_CLASS : TASK_ITEM_TASK_EDIT_CLASS,
-			TASK_ITEM_TASK_EDIT_TASK_CLASS : TASK_ITEM_TASK_EDIT_TASK_CLASS,
-			TASK_ITEM_TASK_EDIT_DEADLINE_CLASS : TASK_ITEM_TASK_EDIT_DEADLINE_CLASS,
 			NO_SELECT_CLASS : NO_SELECT_CLASS,
+			EDITABLE_CLASS : EDITABLE_CLASS,
 		}	
 	////////////////////////////////////////////////////////////////////////////
 
@@ -140,6 +156,8 @@ function TodolistModule(){
 				domElem.innerHTML = widgetHTML;
 				domElem.classList.add(WRAPPER_CLASS);
 
+				widget_name = widget.getElementsByClassName(TODOLIST_NAME_CLASS)[0];
+				widget_collapseBtn = widget.getElementsByClassName(COLLAPSE_BUTTON)[0];
 				widget_addTask = widget.getElementsByClassName(MAIN_INPUT_CLASS)[0];
 				widget_taskList = widget.getElementsByClassName(TASK_LIST_CLASS)[0];
 				widget_filters = widget.getElementsByClassName(FILTERS_CLASS)[0];
@@ -156,10 +174,69 @@ function TodolistModule(){
 		function addListeners(){
 			if(!widget) return
 			///////////////////////////
-		
 
 			///////////////////////////	
-			//listen enter & esc
+			// widget change event
+			//////////////////////////
+				/*widget.addEventListener('change', e => {
+					l(e)
+				})*/
+
+				// local storage edit
+				widget.addEventListener('change', e => {
+					if(!e.detail) return
+					if(e.target != e.currentTarget) return	
+					refreshLocalStorage()
+				})
+			///////////////////////////
+
+			///////////////////////////	
+			// collapse btn
+			//////////////////////////
+				widget_collapseBtn.onclick = function(e){
+					var btn = this;
+
+					if(widget.collapse){
+						expandWidget()
+					} else {
+						collapseWidget()
+					}
+
+					function collapseWidget(){
+						if(!widget.collapseHeight){
+							var todolistName = widget.getElementsByClassName(TODOLIST_NAME_CLASS)[0],
+								todolistName_top = todolistName.getBoundingClientRect().top,
+								todolistName_bottom = todolistName.getBoundingClientRect().bottom,
+								widget_top = widget.getBoundingClientRect().top;
+
+							widget.collapseHeight = (todolistName_bottom - widget_top) + (todolistName_top - widget_top);
+							widget.collapseHeight = Math.floor(widget.collapseHeight)
+						}
+
+						widget.fullHeight = widget.offsetHeight
+						widget.style.maxHeight = widget.fullHeight + 'px';
+						setTimeout(function(){
+							widget.style.maxHeight = widget.collapseHeight + 'px';
+							widget.collapse = true
+							btn.innerHTML = 'expand'
+						},10)
+					}
+
+					function expandWidget(){
+						widget.style.maxHeight = widget.fullHeight + 'px';
+
+						setTimeout(function(){
+							widget.style.maxHeight = null;
+							widget.collapse = false;
+							btn.innerHTML = 'collapse'
+						}, 1000)
+
+					}
+				}
+			///////////////////////////	
+
+			///////////////////////////	
+			// main input listen enter & esc
 			//////////////////////////
 				widget_addTask.onkeydown = function(e){
 					var key = e.keyCode;
@@ -195,9 +272,7 @@ function TodolistModule(){
 				widget.addEventListener('click', e => {
 					var target = e.target;
 
-					//check click on task or deadline
-					if(target.classList && !target.classList.contains(TASK_ITEM_TASK_CLASS)
-					    && !target.classList.contains(TASK_ITEM_DEADLINE_CLASS)) return
+					if(target.classList && !target.classList.contains(EDITABLE_CLASS)) return
 
 					if(!target.firstClick){
 						target.firstClick = true;
@@ -207,6 +282,7 @@ function TodolistModule(){
 					} else {
 						itemEdit(target);
 					}
+
 				})
 			///////////////////////////
 
@@ -389,14 +465,6 @@ function TodolistModule(){
 			///////////////////////////
 			//local storage
 			//////////////////////////
-
-				//listen changing
-				widget.addEventListener('change', e => {
-					if(!e.detail) return
-					if(e.target != e.currentTarget) return	
-					refreshLocalStorage()
-				})
-
 				createTasksFromLocalStorage()	
 			///////////////////////////		
 		}	
@@ -407,9 +475,11 @@ function TodolistModule(){
 			}
 
 			var taskLi = document.createElement('div');
+
 			taskLi.innerHTML = widget_task_template;
 			taskLi = taskLi.firstElementChild;
-			taskLi.getElementsByClassName(TASK_ITEM_TASK_CLASS)[0].textContent = task;
+			var taskArea = taskLi.getElementsByClassName(TASK_ITEM_TASK_CLASS)[0]
+			taskArea.textContent = task;
 			taskLi.dataset.id = taskId++;
 
 
@@ -421,7 +491,8 @@ function TodolistModule(){
 
 			taskLi.classList.add(TASK_ITEM_HIDDEN_CLASS);
 			widget_taskList.appendChild(taskLi);
-			//collapseItem(taskLi)
+			autoGrow(taskArea)
+			
 
 			setTimeout(function(){
 				taskLi.classList.remove(TASK_ITEM_HIDDEN_CLASS);
@@ -460,15 +531,25 @@ function TodolistModule(){
 			setTimeout( function(){
 				li.remove()
 			},500)			
-
 		}
 
 		function clearTaskInput(){
 			widget_addTask.value = '';
 		}
 
-		function itemEdit(span){
-			var startValue = span.innerHTML;
+		function itemEdit(item){
+			var startValue = item.innerHTML,
+				classList = item.classList;
+
+			if(classList.contains(TODOLIST_NAME_CLASS)){
+				todolistNameEdit()
+			} else if(classList.contains(TASK_ITEM_TASK_CLASS)){
+				taskEdit(item)
+			} else if(classList.contains(TASK_ITEM_DEADLINE_CLASS)){
+				deadlineEdit(item)
+			}
+
+			/*var startValue = span.innerHTML;
 
 			if(span.classList.contains(TASK_ITEM_TASK_CLASS)){
 				//task
@@ -491,7 +572,69 @@ function TodolistModule(){
 			tempInput.relatedSpan = span;
 
 			span.parentNode.replaceChild(tempInput, span);
-			tempInput.focus()
+			tempInput.focus()*/
+
+			function todolistNameEdit(){
+
+			}
+
+			function taskEdit(item){
+				var currentLi = item.closest('li'); // save li for obj edit
+
+				item.removeAttribute('readonly');
+				item.classList.add(TASK_ITEM_TASK_EDIT_CLASS);
+				item.setSelectionRange(item.innerHTML.length,item.innerHTML.length);//курсор в конец строки
+
+				item.addEventListener('keydown', escAndEnterListen)
+				function escAndEnterListen(e){
+					l('keydown')
+					autoGrow(item)
+					//listenForEnter(e, setNewTask)
+					listenForEsc(e, returnOldTask)
+				}
+
+				document.addEventListener('mousedown', awayClickForEndEdit)
+				function awayClickForEndEdit(e){
+					if(checkMouseClickOut.call(item, e)){
+						setNewTask()
+					}
+				}
+
+				function setNewTask(){
+					l('setNewTask')
+					item.innerHTML = item.value
+					currentLi.liDataObj.task = item.innerHTML;
+					endOfEditing()
+				}
+
+				function returnOldTask(){
+					l('returnOldTask')
+					item.value = item.innerHTML
+					endOfEditing()
+				}
+
+				function endOfEditing(){
+					autoGrow(item)
+					item.removeEventListener('keydown', escAndEnterListen)
+					document.removeEventListener('mousedown', awayClickForEndEdit)
+					item.setAttribute('readonly', '');
+				}
+				/*
+				var tempFunc =  checkMouseClickOut.bind(item)
+				document.addEventListener('mousedown', tempFunc)
+				*/
+
+
+				//item.addEventListener('click', taskAwayClick)
+				//function taskAwayClick
+				/*addOnceEventListener(document, 'mousedown', function(e){
+					l(e.target == item)
+				})*/
+			}
+
+			function deadlineEdit(span){
+
+			}
 		}
 
 		//collapseItem
@@ -598,9 +741,10 @@ function TodolistModule(){
 
 		function refreshLocalStorage(){
 			var tasks = tasksObj.tasks,
-				tempObj = {};
+				tempObj = {},
+				storageName = 'taskList_' + widget.name;
 
-			localStorage.removeItem('taskList_' + widget.name);	
+			localStorage.removeItem(storageName);	
 
 			for(var prop in tasks){
 				tempObj[prop] = {};
@@ -611,7 +755,8 @@ function TodolistModule(){
 			}
 
 			var serialTasks = JSON.stringify(tempObj)
-			localStorage.setItem('taskList_' + widget.name, serialTasks);
+			localStorage.setItem(storageName, serialTasks);
+			l(localStorage.getItem(storageName))
 		}
 	////////////////////////////////////////////////////////////////////////////
 
@@ -657,6 +802,39 @@ function TodolistModule(){
 		function makeAllPropsChangeListening(obj, element, eventName){
 			for(var prop in obj){
 				makeChangeListening(obj, prop, element, eventName)
+			}
+		}
+
+		function autoGrow(element) {
+		    element.style.height = "0px";
+		    element.style.height = element.scrollHeight + "px";
+		}
+
+		function addOnceEventListener(elem, event, f){
+			elem.addEventListener(event, onceFunction)
+
+			function onceFunction(e){
+				//l(e)
+				f(e);
+				elem.removeEventListener(event, onceFunction)
+			}
+		}
+
+		function checkMouseClickOut(e){
+			var target = e.target,
+				result = this.compareDocumentPosition(target) & 16 || target == this;
+			return !result;
+		}
+
+		function listenForEnter(e, f){
+			if(e.keyCode && e.keyCode == KEY_ENTER_KEYCODE){
+				f();
+			}
+		}
+
+		function listenForEsc(e, f){
+			if(e.keyCode && e.keyCode == KEY_ESC_KEYCODE){
+				f()
 			}
 		}
 	////////////////////////////////////////////////////////////////////////////
