@@ -4,7 +4,7 @@ function TodolistModule(){
 	// templates
 		var listHTML = `<p class="{{ TODOLIST_NAME_CLASS }} {{ EDITABLE_CLASS }}"> TODOLISTNAME </p>
 
-		      <button class="{{ COLLAPSE_BUTTON }}"> collapse / expand</button>
+		      <button class="{{ COLLAPSE_BUTTON_CLASS }}"></button>
 
 		      <ul class="{{ MENU }}"> menu
 		        <li class="{{ MENU_ITEM }}"> <button class="{{ ADD_TODOLIST }}"> ADD NEW TODOLIST</button></li>
@@ -32,19 +32,12 @@ function TodolistModule(){
 		        <div class="{{ NO_TASK_CLASS }} {{ NO_TASK_HIDDEN_CLASS }}"> Нет заданий удовлетворяющих требованию </div>
 		      </div>`,
 
-	      	listItemHTML = `<li class="{{ TASK_ITEM_CLASS }}">
-			      <label class="{{ TASK_ITEM_CHECKBOX_LABEL_CLASS }}"> <input type="checkbox" name="" class="{{ TASK_ITEM_CHECKBOX_CLASS }}"> </label>
-			      <span class="{{ TASK_ITEM_TASK_CLASS }} {{ EDITABLE_CLASS }}"></span>
-			      <span class="{{ TASK_ITEM_DEADLINE_CLASS }} {{ TASK_ITEM_DEADLINE_EMPTY_CLASS }} {{ NO_SELECT_CLASS }}  {{ EDITABLE_CLASS }}"></span> 
-			      <button class="{{ TASK_ITEM_REMOVE_TASK_CLASS }} {{ TASK_ITEM_REMOVE_TASK_HIDDEN_CLASS }}">X</button>
-			    </li>`;
-
-		listItemHTML = `<li class="{{ TASK_ITEM_CLASS }}">
-			      <label class="{{ TASK_ITEM_CHECKBOX_LABEL_CLASS }}"> <input type="checkbox" name="" class="{{ TASK_ITEM_CHECKBOX_CLASS }}"> </label>
-			      <textarea class="{{ TASK_ITEM_TASK_CLASS }} {{ EDITABLE_CLASS }}" readonly></textarea>
-			      <span class="{{ TASK_ITEM_DEADLINE_CLASS }} {{ TASK_ITEM_DEADLINE_EMPTY_CLASS }} {{ NO_SELECT_CLASS }}  {{ EDITABLE_CLASS }}"></span> 
-			      <button class="{{ TASK_ITEM_REMOVE_TASK_CLASS }} {{ TASK_ITEM_REMOVE_TASK_HIDDEN_CLASS }}">X</button>
-			    </li>`;	    
+			listItemHTML = `<li class="{{ TASK_ITEM_CLASS }}">
+				      <label class="{{ TASK_ITEM_CHECKBOX_LABEL_CLASS }}"> <input type="checkbox" name="" class="{{ TASK_ITEM_CHECKBOX_CLASS }}"> </label>
+				      <textarea class="{{ TASK_ITEM_TASK_CLASS }} {{ EDITABLE_CLASS }}" readonly></textarea>
+				      <span class="{{ TASK_ITEM_DEADLINE_CLASS }} {{ TASK_ITEM_DEADLINE_EMPTY_CLASS }} {{ NO_SELECT_CLASS }}  {{ EDITABLE_CLASS }}"></span> 
+				      <button class="{{ TASK_ITEM_REMOVE_TASK_CLASS }} {{ TASK_ITEM_REMOVE_TASK_HIDDEN_CLASS }}">X</button>
+				    </li>`;	    
 	////////////////////////////////////////////////////////////////////////////
 
 	// variables
@@ -65,7 +58,8 @@ function TodolistModule(){
 	// classes
 		const WRAPPER_CLASS = 'todolist-wrapper',
 			TODOLIST_NAME_CLASS = 'todolist-name',
-			COLLAPSE_BUTTON = 'todolist__collapse-btn',
+			COLLAPSE_BUTTON_CLASS = 'todolist__collapse-btn',
+			COLLAPSE_BUTTON_COLLAPSED_CLASS = 'todolist__collapse-btn--collapsed',
 			MENU = 'todolist',
 			MENU_ITEM = '',
 			ADD_TODOLIST = '',
@@ -102,7 +96,7 @@ function TodolistModule(){
 		const todolistClasses = {
 			WRAPPER_CLASS : WRAPPER_CLASS ,
 			TODOLIST_NAME_CLASS : TODOLIST_NAME_CLASS ,
-			COLLAPSE_BUTTON : COLLAPSE_BUTTON,
+			COLLAPSE_BUTTON_CLASS : COLLAPSE_BUTTON_CLASS,
 			MENU : MENU,
 			MENU_ITEM : MENU_ITEM,
 			ADD_TODOLIST : ADD_TODOLIST,
@@ -116,6 +110,7 @@ function TodolistModule(){
 			TASK_LIST_CLASS : TASK_LIST_CLASS ,
 			INFOBAR_CLASS : INFOBAR_CLASS ,
 			INFOBAR_HIDDEN_CLASS : INFOBAR_HIDDEN_CLASS ,
+			INFOBAR_REMAIN_CLASS : INFOBAR_REMAIN_CLASS ,
 			INFOBAR_REMAIN_COUNT_CLASS : INFOBAR_REMAIN_COUNT_CLASS ,
 			INFOBAR_REMOVE_BTN_CLASS : INFOBAR_REMOVE_BTN_CLASS ,
 			INFOBAR_REMOVE_BTN_HIDDEN_CLASS : INFOBAR_REMOVE_BTN_HIDDEN_CLASS ,
@@ -157,7 +152,7 @@ function TodolistModule(){
 				domElem.classList.add(WRAPPER_CLASS);
 
 				widget_name = widget.getElementsByClassName(TODOLIST_NAME_CLASS)[0];
-				widget_collapseBtn = widget.getElementsByClassName(COLLAPSE_BUTTON)[0];
+				widget_collapseBtn = widget.getElementsByClassName(COLLAPSE_BUTTON_CLASS)[0];
 				widget_addTask = widget.getElementsByClassName(MAIN_INPUT_CLASS)[0];
 				widget_taskList = widget.getElementsByClassName(TASK_LIST_CLASS)[0];
 				widget_filters = widget.getElementsByClassName(FILTERS_CLASS)[0];
@@ -218,7 +213,8 @@ function TodolistModule(){
 						setTimeout(function(){
 							widget.style.maxHeight = widget.collapseHeight + 'px';
 							widget.collapse = true
-							btn.innerHTML = 'expand'
+							btn.classList.add(COLLAPSE_BUTTON_COLLAPSED_CLASS);
+							//btn.innerHTML = 'expand'
 						},10)
 					}
 
@@ -228,7 +224,8 @@ function TodolistModule(){
 						setTimeout(function(){
 							widget.style.maxHeight = null;
 							widget.collapse = false;
-							btn.innerHTML = 'collapse'
+							btn.classList.remove(COLLAPSE_BUTTON_COLLAPSED_CLASS);
+							//btn.innerHTML = 'collapse'
 						}, 1000)
 
 					}
@@ -581,19 +578,33 @@ function TodolistModule(){
 			function taskEdit(item){
 				var currentLi = item.closest('li'); // save li for obj edit
 
+				item.setSelectionRange(item.innerHTML.length,item.innerHTML.length);//курсор в конец строки
 				item.removeAttribute('readonly');
 				item.classList.add(TASK_ITEM_TASK_EDIT_CLASS);
-				item.setSelectionRange(item.innerHTML.length,item.innerHTML.length);//курсор в конец строки
-
 				item.addEventListener('keydown', escAndEnterListen)
+				item.addEventListener('keydown', fireAutoGrow)
+				//item.addEventListener('keyup', fireAutoGrow)
+				document.addEventListener('mousedown', awayClickForEndEdit)
+
+				
 				function escAndEnterListen(e){
-					l('keydown')
-					autoGrow(item)
-					//listenForEnter(e, setNewTask)
 					listenForEsc(e, returnOldTask)
+					listenForEnter(e, function(){
+						if(item.value.length){
+							if(item.selectionStart == item.value.length){
+								// cancel default enter
+								e.preventDefault();
+
+								//add '' for smart autoGrow
+								item.value = item.value + '\n'  + '';
+								//autoGrow(item)
+								/*return false*/
+								
+							}
+						}
+					})
 				}
 
-				document.addEventListener('mousedown', awayClickForEndEdit)
 				function awayClickForEndEdit(e){
 					if(checkMouseClickOut.call(item, e)){
 						setNewTask()
@@ -601,35 +612,30 @@ function TodolistModule(){
 				}
 
 				function setNewTask(){
-					l('setNewTask')
 					item.innerHTML = item.value
 					currentLi.liDataObj.task = item.innerHTML;
 					endOfEditing()
 				}
 
 				function returnOldTask(){
-					l('returnOldTask')
 					item.value = item.innerHTML
 					endOfEditing()
 				}
 
-				function endOfEditing(){
+				function fireAutoGrow(){
 					autoGrow(item)
-					item.removeEventListener('keydown', escAndEnterListen)
-					document.removeEventListener('mousedown', awayClickForEndEdit)
-					item.setAttribute('readonly', '');
 				}
-				/*
-				var tempFunc =  checkMouseClickOut.bind(item)
-				document.addEventListener('mousedown', tempFunc)
-				*/
 
+				function endOfEditing(){
+					if(item.value == '') removeTask(currentLi)
 
-				//item.addEventListener('click', taskAwayClick)
-				//function taskAwayClick
-				/*addOnceEventListener(document, 'mousedown', function(e){
-					l(e.target == item)
-				})*/
+					item.setAttribute('readonly', '');
+					item.classList.remove(TASK_ITEM_TASK_EDIT_CLASS);
+					item.removeEventListener('keydown', escAndEnterListen)
+					item.removeEventListener('keydown', fireAutoGrow)
+					item.removeEventListener('keyup', fireAutoGrow)
+					document.removeEventListener('mousedown', awayClickForEndEdit)
+				}
 			}
 
 			function deadlineEdit(span){
@@ -806,7 +812,7 @@ function TodolistModule(){
 		}
 
 		function autoGrow(element) {
-		    element.style.height = "0px";
+		    element.style.height = null;
 		    element.style.height = element.scrollHeight + "px";
 		}
 
