@@ -1,12 +1,35 @@
 'use strict'
-var l = console.log;
+var	txt = document.querySelector('textarea'),
+    ENTER_KEYCODE = 13;
 
-l(localStorage)
+txt.addEventListener('keydown', function(e){
 
-var todolist = new TodolistModule()
-todolist.init(document.getElementsByClassName('todolist-container')[0])
-var todolist2 = new TodolistModule()
-todolist2.init(document.getElementsByClassName('todolist-container')[1], 'namedList')
+  //check carriage at the last position
+	if(this.selectionStart == this.value.length){
+
+    //check enter key
+		if(e.keyCode == ENTER_KEYCODE){
+			// cancel default enter
+			e.preventDefault();
+			//add '' for smart autoGrow
+			this.value = this.value + '\n'  + '';
+			autoGrow(this)
+			return false
+		}
+	}
+  
+	autoGrow(txt)
+});
+
+txt.addEventListener('keyup', function(e){
+	autoGrow(txt)
+});
+
+function autoGrow(item){
+	item.style.height = null;
+	item.style.height = item.scrollHeight + 'px'
+}
+
 
 
 
