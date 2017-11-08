@@ -6,9 +6,8 @@
 
 
 2. Editing
-	2.1 choose time for autogrow + control window.pageYOffset
-	2.2 split editing task and deadline
 	2.3 add editing of todolistname and change name in local storage
+	2.4 create deadline editing
 
 
 4. Style

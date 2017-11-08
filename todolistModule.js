@@ -9,6 +9,10 @@ function TodolistModule(){
 		      <ul class="{{ MENU }}"> menu
 		        <li class="{{ MENU_ITEM }}"> <button class="{{ ADD_TODOLIST }}"> ADD NEW TODOLIST</button></li>
 		        <li class="{{ MENU_ITEM }}"> <button class="{{ REMOVE_TODOLIST }}"> REMOVE CURRENT TODOLIST</button></li>
+		        <li class="{{ MENU_ITEM }}"> 
+					<label> <input type="checkbox"> filters </label>
+					<label> <input type="checkbox"> infobar </label>
+		        </li>
 		      </ul>
 
 		      <input type="text" class="{{ MAIN_INPUT_CLASS }}" autofocus placeholder="what needs to be done?">
@@ -34,7 +38,7 @@ function TodolistModule(){
 
 			listItemHTML = `<li class="{{ TASK_ITEM_CLASS }}">
 				      <label class="{{ TASK_ITEM_CHECKBOX_LABEL_CLASS }}"> <input type="checkbox" name="" class="{{ TASK_ITEM_CHECKBOX_CLASS }}"> </label>
-				      <textarea class="{{ TASK_ITEM_TASK_CLASS }} {{ EDITABLE_CLASS }}" readonly></textarea>
+				      <textarea class="{{ TASK_ITEM_TASK_CLASS }} {{ EDITABLE_CLASS }}" readonly rows='1'></textarea>
 				      <span class="{{ TASK_ITEM_DEADLINE_CLASS }} {{ TASK_ITEM_DEADLINE_EMPTY_CLASS }} {{ NO_SELECT_CLASS }}  {{ EDITABLE_CLASS }}"></span> 
 				      <button class="{{ TASK_ITEM_REMOVE_TASK_CLASS }} {{ TASK_ITEM_REMOVE_TASK_HIDDEN_CLASS }}">X</button>
 				    </li>`;	    
@@ -62,8 +66,8 @@ function TodolistModule(){
 			TODOLIST_NAME_CLASS = 'todolist-name',
 			COLLAPSE_BUTTON_CLASS = 'todolist__collapse-btn',
 			COLLAPSE_BUTTON_COLLAPSED_CLASS = 'todolist__collapse-btn--collapsed',
-			MENU = 'todolist',
-			MENU_ITEM = '',
+			MENU = 'todolist-menu',
+			MENU_ITEM = 'todolist-menu__item',
 			ADD_TODOLIST = '',
 			REMOVE_TODOLIST = '',
 			MAIN_INPUT_CLASS = 'addTask',
@@ -411,6 +415,7 @@ function TodolistModule(){
 						li;
 
 					if(target.nodeName != 'INPUT' || target.getAttribute('type') != 'checkbox') return
+					if(target.classList && !target.classList.contains(TASK_ITEM_CHECKBOX_CLASS)) return
 
 					li = target.closest('li')
 
@@ -578,38 +583,83 @@ function TodolistModule(){
 			}
 
 			function taskEdit(item){
-				var currentLi = item.closest('li'); // save li for obj edit
+				var currentLi = item.closest('li'), // save li for obj edit
+					addingSymbol = '';
+
+				if(!item.label) item.label = item.parentElement.querySelector('.' + TASK_ITEM_CHECKBOX_LABEL_CLASS)
 
 				item.setSelectionRange(item.innerHTML.length,item.innerHTML.length);//курсор в конец строки
 				item.removeAttribute('readonly');
 				item.classList.add(TASK_ITEM_TASK_EDIT_CLASS);
 				document.addEventListener('mousedown', awayClickForEndEdit)
 				item.addEventListener('keydown', itemKeyDown)
-				/*item.addEventListener('keydown', escAndEnterListen)
-				item.addEventListener('keydown', fireAutoGrow)*/
-				
-				function itemKeyDown(e){
 
-				}
-				
-				/*function escAndEnterListen(e){
-					listenForKey(e, KEY_ENTER_KEYCODE, function(){
+				function itemKeyDown(e){
+					if(e.keyCode == KEY_ESC_KEYCODE){
+						returnOldTask()
+						return
+					}
+
+					if(e.keyCode == KEY_ENTER_KEYCODE){
 						if(item.value.length){
+							e.preventDefault();
+							
 							if(item.selectionStart == item.value.length){
-								e.preventDefault();
 								item.value = item.value + '\n'  + '';
+							
+							} else {
+								var arr = item.value.split(''),
+									num = item.selectionStart;
+								arr.splice(num++, 0, '\n');
+								item.value = arr.join('');
+								item.selectionStart = num;
+								item.selectionEnd = num;
+
 							}
 						}
-					})
-					listenForKey(e, KEY_ESC_KEYCODE, returnOldTask)
-					listenForKey(e, KEY_BCKSPC_KEYCODE, fireAutoGrowTrottle)
-					listenForKey(e, KEY_DEL_KEYCODE, fireAutoGrowTrottle)
-				}*/
+					}
+
+
+					/*if(item.value != item.previousValue){
+						fireAutoGrow2Trottle()
+					}
+					item.previousValue = item.value*/
+					fireAutoGrow2Trottle()
+				}
 
 				function awayClickForEndEdit(e){
 					if(checkMouseClickOut.call(item, e)){
 						setNewTask()
 					}
+				}
+
+				function fireAutoGrow2Trottle(){
+					/*if(fireAutoGrow2Trottle.busy){
+						if(!fireAutoGrow2Trottle.queue){
+							fireAutoGrow2Trottle.queue = [];
+						} 
+
+						fireAutoGrow2Trottle.queue.push(true);
+						return
+					}
+
+					fireAutoGrow2Trottle.busy = true;
+*/
+					setTimeout(function(){
+						autoGrow2(item, addingSymbol)
+					},10)
+
+					/*setTimeout(function(){
+						fireAutoGrow2Trottle.busy = false;
+						if(fireAutoGrow2Trottle.queue){
+							if(fireAutoGrow2Trottle.queue[0]){
+								fireAutoGrow2Trottle.queue.pop()
+								fireAutoGrow2Trottle()
+							} else {
+								delete fireAutoGrow2Trottle.queue
+							}
+						}
+					},100)*/
 				}
 
 				function setNewTask(){
@@ -623,23 +673,13 @@ function TodolistModule(){
 					endOfEditing()
 				}
 
-				function fireAutoGrow(){
-					autoGrow(item)
-				}
-
-				function fireAutoGrowTrottle(){
-					setTimeout(function(){
-						autoGrow(item)
-					},0)
-				}
-
 				function endOfEditing(){
 					while(item.value[item.value.length-1] == '\n'){
 						l('last \n')
 						item.value = item.value.slice(0,-1)	
 					}
 
-					autoGrow(item)
+					fireAutoGrow2Trottle()
 
 					if(item.value == '') removeTask(currentLi)
 
@@ -648,9 +688,7 @@ function TodolistModule(){
 					item.classList.remove(TASK_ITEM_TASK_EDIT_CLASS);
 					document.removeEventListener('mousedown', awayClickForEndEdit)
 
-					/*item.removeEventListener('keydown', escAndEnterListen)
-					item.removeEventListener('keydown', fireAutoGrow)
-					item.removeEventListener('keyup', fireAutoGrow)*/
+					item.removeEventListener('keydown', itemKeyDown)
 				}
 			}
 
@@ -828,12 +866,37 @@ function TodolistModule(){
 		}
 
 		function autoGrow(element) {
-			var savedScroll = window.pageYOffset;
-			l('savedScroll : ', savedScroll)
+			l('autoGrow')
+			//var savedScroll = window.pageYOffset;
+			//l('savedScroll : ', savedScroll)
+
 		    element.style.height = null;
 		    element.style.height = element.scrollHeight + "px";
 
-		    window.pageYOffset = savedScroll;
+		    //window.pageYOffset = savedScroll;
+		}
+
+		function autoGrow2(item, addingSymbol){
+			l('autoGrow2')
+			var tempItem = item.cloneNode(1),
+				computedHeigth;
+
+			tempItem.classList.add('tempItem');
+			tempItem.style.width = getComputedStyle(item).width
+			tempItem.style.height = null;
+			tempItem.value = tempItem.value + addingSymbol;
+			item.parentNode.appendChild(tempItem);
+
+			//computedHeigth = Math.ceil(tempItem.scrollHeight/10)*10;
+			computedHeigth = tempItem.scrollHeight;
+
+			setTimeout(function(){
+				tempItem.remove()
+				item.style.height = computedHeigth + 'px';
+
+				//if(item.label) item.label.style.height = computedHeigth + 'px';
+				//item.closest('label').style.height = computedHeigth + 'px';
+			},0)
 		}
 
 		function addOnceEventListener(elem, event, f){
