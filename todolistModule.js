@@ -52,7 +52,9 @@ function TodolistModule(){
 			tempInput;
 
 		const KEY_ENTER_KEYCODE = 13,
-			  KEY_ESC_KEYCODE = 27;	
+			  KEY_ESC_KEYCODE = 27,
+			  KEY_DEL_KEYCODE = 46,
+			  KEY_BCKSPC_KEYCODE = 8;
 	////////////////////////////////////////////////////////////////////////////
 
 	// classes
@@ -581,29 +583,28 @@ function TodolistModule(){
 				item.setSelectionRange(item.innerHTML.length,item.innerHTML.length);//курсор в конец строки
 				item.removeAttribute('readonly');
 				item.classList.add(TASK_ITEM_TASK_EDIT_CLASS);
-				item.addEventListener('keydown', escAndEnterListen)
-				item.addEventListener('keydown', fireAutoGrow)
-				//item.addEventListener('keyup', fireAutoGrow)
 				document.addEventListener('mousedown', awayClickForEndEdit)
-
+				item.addEventListener('keydown', itemKeyDown)
+				/*item.addEventListener('keydown', escAndEnterListen)
+				item.addEventListener('keydown', fireAutoGrow)*/
 				
-				function escAndEnterListen(e){
-					listenForEsc(e, returnOldTask)
-					listenForEnter(e, function(){
+				function itemKeyDown(e){
+
+				}
+				
+				/*function escAndEnterListen(e){
+					listenForKey(e, KEY_ENTER_KEYCODE, function(){
 						if(item.value.length){
 							if(item.selectionStart == item.value.length){
-								// cancel default enter
 								e.preventDefault();
-
-								//add '' for smart autoGrow
 								item.value = item.value + '\n'  + '';
-								//autoGrow(item)
-								/*return false*/
-								
 							}
 						}
 					})
-				}
+					listenForKey(e, KEY_ESC_KEYCODE, returnOldTask)
+					listenForKey(e, KEY_BCKSPC_KEYCODE, fireAutoGrowTrottle)
+					listenForKey(e, KEY_DEL_KEYCODE, fireAutoGrowTrottle)
+				}*/
 
 				function awayClickForEndEdit(e){
 					if(checkMouseClickOut.call(item, e)){
@@ -626,15 +627,30 @@ function TodolistModule(){
 					autoGrow(item)
 				}
 
+				function fireAutoGrowTrottle(){
+					setTimeout(function(){
+						autoGrow(item)
+					},0)
+				}
+
 				function endOfEditing(){
+					while(item.value[item.value.length-1] == '\n'){
+						l('last \n')
+						item.value = item.value.slice(0,-1)	
+					}
+
+					autoGrow(item)
+
 					if(item.value == '') removeTask(currentLi)
+
 
 					item.setAttribute('readonly', '');
 					item.classList.remove(TASK_ITEM_TASK_EDIT_CLASS);
-					item.removeEventListener('keydown', escAndEnterListen)
-					item.removeEventListener('keydown', fireAutoGrow)
-					item.removeEventListener('keyup', fireAutoGrow)
 					document.removeEventListener('mousedown', awayClickForEndEdit)
+
+					/*item.removeEventListener('keydown', escAndEnterListen)
+					item.removeEventListener('keydown', fireAutoGrow)
+					item.removeEventListener('keyup', fireAutoGrow)*/
 				}
 			}
 
@@ -812,8 +828,12 @@ function TodolistModule(){
 		}
 
 		function autoGrow(element) {
+			var savedScroll = window.pageYOffset;
+			l('savedScroll : ', savedScroll)
 		    element.style.height = null;
 		    element.style.height = element.scrollHeight + "px";
+
+		    window.pageYOffset = savedScroll;
 		}
 
 		function addOnceEventListener(elem, event, f){
@@ -840,6 +860,12 @@ function TodolistModule(){
 
 		function listenForEsc(e, f){
 			if(e.keyCode && e.keyCode == KEY_ESC_KEYCODE){
+				f()
+			}
+		}
+
+		function listenForKey(e, keyCode, f){
+			if(e.keyCode && e.keyCode == keyCode){
 				f()
 			}
 		}
