@@ -21,6 +21,7 @@
 	5.6 make remove list button
 	5.7 optimize speed of collase/expand
 	5.8 black popup under when edit!
-	
+	5.9 expand and collapse issue!
+	5.10 save collapse position => reorgonize local storage
 
 

@@ -12,6 +12,7 @@ function TodolistModule(){
 		        <li class="{{ MENU_ITEM }}"> 
 					<label> <input type="checkbox"> filters </label>
 					<label> <input type="checkbox"> infobar </label>
+					<label> <input type="checkbox"> deadline </label>
 		        </li>
 		      </ul>
 
@@ -58,7 +59,10 @@ function TodolistModule(){
 		const KEY_ENTER_KEYCODE = 13,
 			  KEY_ESC_KEYCODE = 27,
 			  KEY_DEL_KEYCODE = 46,
-			  KEY_BCKSPC_KEYCODE = 8;
+			  KEY_BCKSPC_KEYCODE = 8,
+			  LOCAL_NAME_PREFIX = 'taskList_',
+			  LOCAL_RENAME_PREFIX = 'renamed: ',
+			  DEFAULT_TODO_LIST_NAME = 'TODOLIST';
 	////////////////////////////////////////////////////////////////////////////
 
 	// classes
@@ -148,11 +152,19 @@ function TodolistModule(){
 
 			var widgetHTML;
 
-			tasklistName = tasklistName || ('undefined' + TodolistModule.count++);
+			tasklistName = tasklistName || (DEFAULT_TODO_LIST_NAME + ' ' + TodolistModule.count++);
 
 			if(!widget){
 				widget = domElem;
+				widget.createdName = tasklistName;
 				widget.name = tasklistName;
+
+				var realWidgetName = localStorage.getItem(LOCAL_RENAME_PREFIX + tasklistName);
+				if(realWidgetName != null){
+					l('realName?')
+					widget.name = realWidgetName
+				}
+				
 				widgetHTML = templater(todolist_template)(todolistClasses);
 				domElem.innerHTML = widgetHTML;
 				domElem.classList.add(WRAPPER_CLASS);
@@ -168,6 +180,8 @@ function TodolistModule(){
 				widget_infobarRemoveBtn = widget.getElementsByClassName(INFOBAR_REMOVE_BTN_CLASS)[0]
 				widget_noTasksMessage = widget.getElementsByClassName(NO_TASK_CLASS)[0];
 
+				widget_name.textContent = widget.name;
+				makeChangeListening(widget, 'name', widget, 'rename');
 				addListeners();
 			}
 		}
@@ -188,6 +202,15 @@ function TodolistModule(){
 					if(!e.detail) return
 					if(e.target != e.currentTarget) return	
 					refreshLocalStorage()
+				})
+
+				widget.addEventListener('rename', e => {
+					if(!e.detail) return
+
+					l(e.detail)					
+					var oldName = e.detail.previousValue,
+						newName = e.detail.value;	
+					renameLocalStorage(newName, oldName)
 				})
 			///////////////////////////
 
@@ -469,6 +492,7 @@ function TodolistModule(){
 			///////////////////////////
 			//local storage
 			//////////////////////////
+				
 				createTasksFromLocalStorage()	
 			///////////////////////////		
 		}	
@@ -579,12 +603,65 @@ function TodolistModule(){
 			tempInput.focus()*/
 
 			function todolistNameEdit(){
+				//widget_name
+				var tempRenamingInput = document.createElement('input'),
+					oldName = widget_name.textContent;
 
+				tempRenamingInput.classList.add(TODOLIST_NAME_CLASS + '--edit');
+				tempRenamingInput.value = oldName;
+
+				widget_name.parentElement.replaceChild(tempRenamingInput, widget_name);
+				widget_collapseBtn.classList.add(COLLAPSE_BUTTON_CLASS + '--hidden')
+
+				tempRenamingInput.focus()
+				tempRenamingInput.setSelectionRange(tempRenamingInput.value.length, tempRenamingInput.value.length);
+				
+				tempRenamingInput.addEventListener('keydown', tempRenamingInputKeyDown)
+				document.addEventListener('mousedown', awayClickForEndEdit)
+
+				function tempRenamingInputKeyDown(e){
+					if(e.keyCode == KEY_ENTER_KEYCODE){
+						setNewName()
+					}
+
+					if(e.keyCode == KEY_ESC_KEYCODE){
+						returnOldName()
+					}
+				}
+
+				function awayClickForEndEdit(e){
+					if(checkMouseClickOut.call(tempRenamingInput, e)){
+						setNewName()
+					}
+				}
+
+				function setNewName(){
+					if(widget.name == tempRenamingInput.value){
+						returnOldName()
+						return;
+					}
+
+					widget_name.textContent = tempRenamingInput.value;
+					widget.name = tempRenamingInput.value;
+					endOfRenaming()
+				}
+
+				function returnOldName(){
+					endOfRenaming()
+				}
+
+				function endOfRenaming(){
+					tempRenamingInput.removeEventListener('keydown', tempRenamingInputKeyDown)
+					document.removeEventListener('mousedown', awayClickForEndEdit)
+
+					widget_collapseBtn.classList.remove(COLLAPSE_BUTTON_CLASS + '--hidden')
+					tempRenamingInput.parentElement.replaceChild(widget_name, tempRenamingInput);
+				}
 			}
 
 			function taskEdit(item){
-				var currentLi = item.closest('li'), // save li for obj edit
-					addingSymbol = '';
+				l(item.cur)
+				var currentLi = item.closest('li');
 
 				if(!item.label) item.label = item.parentElement.querySelector('.' + TASK_ITEM_CHECKBOX_LABEL_CLASS)
 
@@ -601,6 +678,11 @@ function TodolistModule(){
 					}
 
 					if(e.keyCode == KEY_ENTER_KEYCODE){
+						if(e.ctrlKey){
+							setNewTask()
+							return
+						} 
+
 						if(item.value.length){
 							e.preventDefault();
 							
@@ -619,11 +701,6 @@ function TodolistModule(){
 						}
 					}
 
-
-					/*if(item.value != item.previousValue){
-						fireAutoGrow2Trottle()
-					}
-					item.previousValue = item.value*/
 					fireAutoGrow2Trottle()
 				}
 
@@ -634,32 +711,9 @@ function TodolistModule(){
 				}
 
 				function fireAutoGrow2Trottle(){
-					/*if(fireAutoGrow2Trottle.busy){
-						if(!fireAutoGrow2Trottle.queue){
-							fireAutoGrow2Trottle.queue = [];
-						} 
-
-						fireAutoGrow2Trottle.queue.push(true);
-						return
-					}
-
-					fireAutoGrow2Trottle.busy = true;
-*/
 					setTimeout(function(){
-						autoGrow2(item, addingSymbol)
+						autoGrow2(item)
 					},10)
-
-					/*setTimeout(function(){
-						fireAutoGrow2Trottle.busy = false;
-						if(fireAutoGrow2Trottle.queue){
-							if(fireAutoGrow2Trottle.queue[0]){
-								fireAutoGrow2Trottle.queue.pop()
-								fireAutoGrow2Trottle()
-							} else {
-								delete fireAutoGrow2Trottle.queue
-							}
-						}
-					},100)*/
 				}
 
 				function setNewTask(){
@@ -674,12 +728,17 @@ function TodolistModule(){
 				}
 
 				function endOfEditing(){
+					var excessEnter = false;
 					while(item.value[item.value.length-1] == '\n'){
+						excessEnter = true;
 						l('last \n')
 						item.value = item.value.slice(0,-1)	
 					}
 
-					fireAutoGrow2Trottle()
+					if(excessEnter){
+						fireAutoGrow2Trottle()
+						currentLi.liDataObj.task = item.value
+					}					
 
 					if(item.value == '') removeTask(currentLi)
 
@@ -789,7 +848,7 @@ function TodolistModule(){
 
 	// Local Storage
 		function createTasksFromLocalStorage(){
-			var localTaskList = localStorage.getItem('taskList_' + widget.name);
+			var localTaskList = localStorage.getItem(LOCAL_NAME_PREFIX + widget.name);
 			if(localTaskList){
 				var localTasks = JSON.parse(localTaskList)
 				for(var num in localTasks){
@@ -802,7 +861,7 @@ function TodolistModule(){
 		function refreshLocalStorage(){
 			var tasks = tasksObj.tasks,
 				tempObj = {},
-				storageName = 'taskList_' + widget.name;
+				storageName = LOCAL_NAME_PREFIX + widget.name;
 
 			localStorage.removeItem(storageName);	
 
@@ -817,6 +876,17 @@ function TodolistModule(){
 			var serialTasks = JSON.stringify(tempObj)
 			localStorage.setItem(storageName, serialTasks);
 			l(localStorage.getItem(storageName))
+		}
+
+		function renameLocalStorage(newName, oldName){
+			var oldStorageName = LOCAL_NAME_PREFIX + oldName,
+				newStorageName = LOCAL_NAME_PREFIX + newName;
+
+			var storageData = localStorage.getItem(oldStorageName);
+
+			localStorage.removeItem(oldStorageName);
+			localStorage.setItem(newStorageName, storageData);
+			localStorage.setItem(LOCAL_RENAME_PREFIX + widget.createdName, newName)
 		}
 	////////////////////////////////////////////////////////////////////////////
 
@@ -842,6 +912,8 @@ function TodolistModule(){
 			Object.defineProperty(obj, prop, {
 				get: function(){ return startValue},
 				set: function(n){
+					var previousValue = obj[prop];
+
 					Object.defineProperty(obj, prop, {
 						get: function(){ return n }
 					});
@@ -850,7 +922,8 @@ function TodolistModule(){
 						bubbles : true,
 						detail: {
 							prop: prop,
-							value : n
+							value : n,
+							previousValue: previousValue,
 						}
 					})
 
@@ -876,7 +949,7 @@ function TodolistModule(){
 		    //window.pageYOffset = savedScroll;
 		}
 
-		function autoGrow2(item, addingSymbol){
+		function autoGrow2(item){
 			l('autoGrow2')
 			var tempItem = item.cloneNode(1),
 				computedHeigth;
@@ -884,18 +957,17 @@ function TodolistModule(){
 			tempItem.classList.add('tempItem');
 			tempItem.style.width = getComputedStyle(item).width
 			tempItem.style.height = null;
-			tempItem.value = tempItem.value + addingSymbol;
+			tempItem.value = tempItem.value;
 			item.parentNode.appendChild(tempItem);
 
-			//computedHeigth = Math.ceil(tempItem.scrollHeight/10)*10;
 			computedHeigth = tempItem.scrollHeight;
 
 			setTimeout(function(){
 				tempItem.remove()
 				item.style.height = computedHeigth + 'px';
 
-				//if(item.label) item.label.style.height = computedHeigth + 'px';
-				//item.closest('label').style.height = computedHeigth + 'px';
+				//if(item.label) item.label.style.height = computedHeigth - 10 + 'px';
+
 			},0)
 		}
 
