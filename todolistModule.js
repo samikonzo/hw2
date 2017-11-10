@@ -52,17 +52,30 @@ function TodolistModule(){
 			widget_infobar, widget_infobarRemain, widget_infobarSelected, widget_infobarRemoveBtn,
 			tasksObj = {tasksCount : 0,	tasksSelected : 0, tasks : {}},
 			taskId = 0,
-			todolist_template = listHTML,//document.getElementById('todolist-template').innerHTML,
-			todolist_task_item_template = listItemHTML,//document.getElementById('todolist-task-item-template').innerHTML,
-			tempInput;
+			todolist_template = listHTML,
+			todolist_task_item_template = listItemHTML,
+			tempInput,
+			dataObj = {
+				tasks: {},
+				options: {
+					collapse: false,
+				},
+			};
+
+			Object.defineProperty(dataObj.options, 'collapse', {
+				get: function(){
+					return widget.collapse
+				},
+			})
 
 		const KEY_ENTER_KEYCODE = 13,
 			  KEY_ESC_KEYCODE = 27,
 			  KEY_DEL_KEYCODE = 46,
 			  KEY_BCKSPC_KEYCODE = 8,
-			  LOCAL_NAME_PREFIX = 'taskList_',
-			  LOCAL_RENAME_PREFIX = 'renamed: ',
-			  DEFAULT_TODO_LIST_NAME = 'TODOLIST';
+			  //do not change it, or list will be lost
+			  LOCAL_NAME_PREFIX = 'todo_',
+			  LOCAL_RENAME_PREFIX = 'todo_renamed: ',
+			  DEFAULT_TODO_LIST_NAME = 'Todo';
 	////////////////////////////////////////////////////////////////////////////
 
 	// classes
@@ -183,6 +196,7 @@ function TodolistModule(){
 				widget_name.textContent = widget.name;
 				makeChangeListening(widget, 'name', widget, 'rename');
 				addListeners();
+				createTasksFromLocalStorage()	
 			}
 		}
 
@@ -193,10 +207,6 @@ function TodolistModule(){
 			///////////////////////////	
 			// widget change event
 			//////////////////////////
-				/*widget.addEventListener('change', e => {
-					l(e)
-				})*/
-
 				// local storage edit
 				widget.addEventListener('change', e => {
 					if(!e.detail) return
@@ -220,6 +230,10 @@ function TodolistModule(){
 				widget_collapseBtn.onclick = function(e){
 					var btn = this;
 
+					if(widget_collapseBtn.buzy){
+						clearTimeout(widget_collapseBtn.timer)
+					}
+
 					if(widget.collapse){
 						expandWidget()
 					} else {
@@ -239,24 +253,29 @@ function TodolistModule(){
 
 						widget.fullHeight = widget.offsetHeight
 						widget.style.maxHeight = widget.fullHeight + 'px';
-						setTimeout(function(){
+
+						widget_collapseBtn.buzy = true
+
+						widget_collapseBtn.timer = setTimeout(function(){
 							widget.style.maxHeight = widget.collapseHeight + 'px';
 							widget.collapse = true
 							btn.classList.add(COLLAPSE_BUTTON_COLLAPSED_CLASS);
-							//btn.innerHTML = 'expand'
 						},10)
 					}
 
 					function expandWidget(){
 						widget.style.maxHeight = widget.fullHeight + 'px';
+						widget.collapse = false;
+						btn.classList.remove(COLLAPSE_BUTTON_COLLAPSED_CLASS);
 
-						setTimeout(function(){
+						widget_collapseBtn.timer = setTimeout(function(){
 							widget.style.maxHeight = null;
-							widget.collapse = false;
-							btn.classList.remove(COLLAPSE_BUTTON_COLLAPSED_CLASS);
-							//btn.innerHTML = 'collapse'
 						}, 1000)
+					}
 
+					function collapseExpandWidgetEnd(){
+						widget_collapseBtn.buzy = false;
+						delete widget_collapseBtn.timer 
 					}
 				}
 			///////////////////////////	
@@ -487,14 +506,6 @@ function TodolistModule(){
 					})
 				}
 			///////////////////////////
-
-
-			///////////////////////////
-			//local storage
-			//////////////////////////
-				
-				createTasksFromLocalStorage()	
-			///////////////////////////		
 		}	
 
 		function addNewTask(task, deadline, check){
@@ -519,7 +530,6 @@ function TodolistModule(){
 
 			taskLi.classList.add(TASK_ITEM_HIDDEN_CLASS);
 			widget_taskList.appendChild(taskLi);
-			autoGrow(taskArea)
 			
 
 			setTimeout(function(){
@@ -537,8 +547,13 @@ function TodolistModule(){
 			}
 
 			tasksObj.tasks[liDataObj.id] = liDataObj
-			makeAllPropsChangeListening(tasksObj.tasks[liDataObj.id], widget);
+			dataObj.tasks[liDataObj.id] = liDataObj
+
+			//makeAllPropsChangeListening(tasksObj.tasks[liDataObj.id], widget);
+			makeAllPropsChangeListening(dataObj.tasks[liDataObj.id], widget);
+
 			taskLi.liDataObj = liDataObj
+
 
 			if(check){
 				taskLi.getElementsByClassName(TASK_ITEM_CHECKBOX_CLASS)[0].click()
@@ -848,33 +863,59 @@ function TodolistModule(){
 
 	// Local Storage
 		function createTasksFromLocalStorage(){
-			var localTaskList = localStorage.getItem(LOCAL_NAME_PREFIX + widget.name);
+			var storageName = LOCAL_NAME_PREFIX + widget.name,
+				localTaskList = localStorage.getItem(storageName);
+
+
 			if(localTaskList){
-				var localTasks = JSON.parse(localTaskList)
-				for(var num in localTasks){
-					var task = localTasks[num]
+				var localList = JSON.parse(localTaskList);
+
+				var	tasks = localList.tasks,
+					options = localList.options;
+
+				for(var num in tasks){
+					var task = tasks[num];
 					addNewTask(task.task, task.deadline, task.checked)
+				}	
+
+				if(options.collapse){
+					widget_collapseBtn.click();
 				}
 			}
 		}
 
 		function refreshLocalStorage(){
-			var tasks = tasksObj.tasks,
-				tempObj = {},
-				storageName = LOCAL_NAME_PREFIX + widget.name;
+			var tempObj = {
+					options : {},
+					tasks: {}
+				},
+				options = dataObj.options,
+				tasks = dataObj.tasks;
 
-			localStorage.removeItem(storageName);	
+			for(var prop in options){
+				l(prop, ' : ', options[prop]);
 
-			for(var prop in tasks){
-				tempObj[prop] = {};
-				tempObj[prop].id = tasks[prop].id;
-				tempObj[prop].checked = tasks[prop].checked;
-				tempObj[prop].deadline = tasks[prop].deadline;
-				tempObj[prop].task = tasks[prop].task;
+				tempObj.options[prop] = options[prop]
 			}
 
-			var serialTasks = JSON.stringify(tempObj)
-			localStorage.setItem(storageName, serialTasks);
+
+			for(var num in tasks){
+				tempObj.tasks[num] = {}
+				for(var prop in tasks[num]){
+					if(prop != 'element'){
+						tempObj.tasks[num][prop] = tasks[num][prop]
+					}
+				}
+			}	
+
+			l(tempObj)
+
+			var localList = JSON.stringify(tempObj),
+				storageName = LOCAL_NAME_PREFIX + widget.name;
+
+			l(localList)
+
+			localStorage.setItem(storageName, localList);
 			l(localStorage.getItem(storageName))
 		}
 
@@ -936,17 +977,6 @@ function TodolistModule(){
 			for(var prop in obj){
 				makeChangeListening(obj, prop, element, eventName)
 			}
-		}
-
-		function autoGrow(element) {
-			l('autoGrow')
-			//var savedScroll = window.pageYOffset;
-			//l('savedScroll : ', savedScroll)
-
-		    element.style.height = null;
-		    element.style.height = element.scrollHeight + "px";
-
-		    //window.pageYOffset = savedScroll;
 		}
 
 		function autoGrow2(item){
