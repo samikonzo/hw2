@@ -1,5 +1,10 @@
 function TodolistModule(){
-	if(!TodolistModule.count) TodolistModule.count = 0;
+	if(TodolistModule.count == undefined){
+		TodolistModule.count = 0;
+		localStorage.setItem('names', JSON.stringify({}));
+	} else {
+		TodolistModule.count++;
+	}
 
 	// templates
 		var listHTML = `<p class="{{ TODOLIST_NAME_CLASS }} {{ EDITABLE_CLASS }}"> TODOLISTNAME </p>
@@ -169,15 +174,22 @@ function TodolistModule(){
 
 			if(!widget){
 				widget = domElem;
+				
+				//naming
 				widget.createdName = tasklistName;
 				widget.name = tasklistName;
 
-				var realWidgetName = localStorage.getItem(LOCAL_RENAME_PREFIX + tasklistName);
+				localStorageItemInit();
+
+				var realWidgetName = localStorage.getItem(LOCAL_RENAME_PREFIX + widget.name);
 				if(realWidgetName != null){
 					l('realName?')
 					widget.name = realWidgetName
 				}
 				
+
+
+
 				widgetHTML = templater(todolist_template)(todolistClasses);
 				domElem.innerHTML = widgetHTML;
 				domElem.classList.add(WRAPPER_CLASS);
@@ -196,7 +208,8 @@ function TodolistModule(){
 				widget_name.textContent = widget.name;
 				makeChangeListening(widget, 'name', widget, 'rename');
 				addListeners();
-				createTasksFromLocalStorage()	
+				createTasksFromLocalStorage();
+				refreshLocalStorage()	
 			}
 		}
 
@@ -306,7 +319,6 @@ function TodolistModule(){
 						var currentLi = target.closest('li');
 						//tasksObj.tasksCount--
 						removeTask(currentLi)
-
 					}
 				})
 			///////////////////////////
@@ -531,6 +543,7 @@ function TodolistModule(){
 			taskLi.classList.add(TASK_ITEM_HIDDEN_CLASS);
 			widget_taskList.appendChild(taskLi);
 			
+			autoGrow2(taskArea)
 
 			setTimeout(function(){
 				taskLi.classList.remove(TASK_ITEM_HIDDEN_CLASS);
@@ -558,6 +571,7 @@ function TodolistModule(){
 			if(check){
 				taskLi.getElementsByClassName(TASK_ITEM_CHECKBOX_CLASS)[0].click()
 			}
+
 			refreshLocalStorage()
 		}
 
@@ -566,9 +580,9 @@ function TodolistModule(){
 			if(liDataObj.checked) tasksObj.tasksSelected--;
 			tasksObj.tasksCount--;	
 
-			delete tasksObj.tasks[liDataObj.id]
-			refreshLocalStorage()
+			delete dataObj.tasks[liDataObj.id]
 
+			refreshLocalStorage()
 			
 			collapseItem(li);
 			setTimeout( function(){
@@ -862,6 +876,29 @@ function TodolistModule(){
 	////////////////////////////////////////////////////////////////////////////
 
 	// Local Storage
+		function localStorageItemInit(){
+			var newName = widget.createdName;
+
+			var localNames = JSON.parse(localStorage.getItem('names'));
+
+			//add prefix if newName exist
+			var prefix = 0,
+				tempName = newName;		
+
+			while(localNames[tempName]){
+				prefix++;
+				tempName = newName + ' (' + prefix + ')';
+			}	
+
+			newName = tempName
+
+
+			widget.createdName = newName;
+			widget.name = newName;
+			localNames[newName] = true;
+			localStorage.setItem('names', JSON.stringify(localNames))
+		}
+
 		function createTasksFromLocalStorage(){
 			var storageName = LOCAL_NAME_PREFIX + widget.name,
 				localTaskList = localStorage.getItem(storageName);
@@ -869,6 +906,11 @@ function TodolistModule(){
 
 			if(localTaskList){
 				var localList = JSON.parse(localTaskList);
+
+				if(!localList){
+					l('ERROR : no localList at ', storageName)
+					return
+				}
 
 				var	tasks = localList.tasks,
 					options = localList.options;
@@ -893,11 +935,8 @@ function TodolistModule(){
 				tasks = dataObj.tasks;
 
 			for(var prop in options){
-				l(prop, ' : ', options[prop]);
-
-				tempObj.options[prop] = options[prop]
+				tempObj.options[prop] = options[prop] || false;
 			}
-
 
 			for(var num in tasks){
 				tempObj.tasks[num] = {}
@@ -908,18 +947,35 @@ function TodolistModule(){
 				}
 			}	
 
-			l(tempObj)
-
 			var localList = JSON.stringify(tempObj),
 				storageName = LOCAL_NAME_PREFIX + widget.name;
-
-			l(localList)
 
 			localStorage.setItem(storageName, localList);
 			l(localStorage.getItem(storageName))
 		}
 
 		function renameLocalStorage(newName, oldName){
+			var localNames = JSON.parse(localStorage.getItem('names'));
+
+			//add prefix if newName exist
+			var prefix = 0,
+				tempName = newName;		
+
+			while(localNames[tempName]){
+				prefix++;
+				tempName = newName + ' (' + prefix + ')';
+			}	 
+
+			newName = tempName
+
+			//rename widget, replace name in localStorage.names
+			widget_name.innerHTML = newName;
+			delete localNames[oldName];
+			localNames[newName] = true;
+			localStorage.setItem('names', JSON.stringify(localNames))
+
+
+			//replace storage data
 			var oldStorageName = LOCAL_NAME_PREFIX + oldName,
 				newStorageName = LOCAL_NAME_PREFIX + newName;
 
