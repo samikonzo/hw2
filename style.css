@@ -19,6 +19,7 @@ html, body {
   transition:  1s;
 }
 
+
 /*------------------TODOLIST NAME---------------------*/
   .todolist-name{
     display:  block;
@@ -50,13 +51,17 @@ html, body {
     top: 20px;
     left: 20px;
     height: 30px;
-    width: 150px;
+    width: 100px;
     line-height:  30px;
     opacity: 1;
     transition: .5s;
+    background: lightgreen;
+    border:  none;
+    outline:  none;
+    cursor: pointer;
   }
   .todolist__collapse-btn--hidden{
-    opacity: 0;
+    opacity: 0.3;
   }
   .todolist__collapse-btn::before{
     position: absolute;
@@ -116,10 +121,10 @@ html, body {
 
 .task-item{
   position: relative;
-  border: 1px solid blue;
+  border-bottom: 1px solid grey;
 
   width: 660px;
-  padding: 0 10px;
+  padding: 10px 10px 0px;
   margin: 0;
   left: 0;
   text-decoration: none;
@@ -133,12 +138,13 @@ html, body {
   
   opacity: 1;
   overflow: hidden;
-  transition: .5s linear;
+  transition: .7s;
   box-sizing: border-box;
 }
 .task-item--hidden{
-  background:  green;
-  opacity:  0.5;
+  /* background:  green; */
+  opacity:  0;
+  transition: .7s,  opacity .4s;
 }
 
 
@@ -146,11 +152,10 @@ html, body {
 
 /*------------------CHECKBOX---------------------*/
   .task-item__checkbox-label{
-    /* border: 1px solid green; */
+    /* border: 1px solid green;  */
     position: relative;
     display:  block;
     width: 40px;
-    /* min-height: 140px; */
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -160,10 +165,10 @@ html, body {
   .task-item__checkbox-label::before{
     content: '';
     position: absolute;
-    width: 40px;
-    height: 100%;
-    /* border:1px dashed red; */
-    left: -12px;
+    width: 50px;
+    height: 52px;
+    left: -10px;
+    /* border: 1px dashed red; */
   }
 
   .task-item__checkbox{
@@ -173,6 +178,7 @@ html, body {
     height: 20px;
     margin-right: 12px;
     cursor: pointer;
+    border: 1px dashed;
   }
   .task-item__checkbox::before{
     content: '';
@@ -181,11 +187,11 @@ html, body {
     width: 100%;
     height: 100%;
     background: white;
-    border:1px solid;
+    border:1px solid lightgrey;
     box-sizing: border-box;
   }
   .task-item__checkbox:checked::before{
-    background: green;
+    background: lightgreen;
   }
   .task-item__checkbox::after{
     content: '✔';
@@ -193,7 +199,6 @@ html, body {
     position: absolute;
     top:0;
     left:5px;
-    color: green;
     opacity: 0;
     transition: .3s;
   }
@@ -203,11 +208,11 @@ html, body {
   }
 
   .task-item:hover .task-item__checkbox:not(:checked)::before{
-    background: rgba(0, 255,0, 0.3);
+    /* background: rgba(200, 200, 200, 0.0); */
   }
   .task-item:hover .task-item__checkbox:not(:checked)::after{
-    color: rgba(255, 255, 255, 1);
-    opacity: 1;
+    /* color: rgba(255, 255, 255, 0.3); */
+    opacity: 0.3;
   }
 
 /*------------------CHECKBOX---------------------*/
@@ -217,10 +222,12 @@ html, body {
     display: inline-block;
     width: 520px;
     margin: 0px 5px;
-    border:1px dashed red;
+    /* border:1px dashed red; */
     word-wrap: break-word;
     cursor:  default;
     resize: none;
+    outline: none;
+    border: none;
     overflow: hidden ; 
 
     transition: .5s;
@@ -240,13 +247,15 @@ html, body {
     background: rgba(100, 0, 0, 0.3);
     opacity: 0;
   }
-
+/*------------------TASK ITEM---------------------*/
+  
+/*------------------DEAD LINE---------------------*/
   .task-item__deadline{
     display: inline-block;
     width:150px;
     min-width: 150px;
     border:1px dashed black;
-    min-height: 40px;
+    /* min-height: 40px; */
     height: 100%;
     padding: 10px;
     box-sizing: border-box;
@@ -325,8 +334,7 @@ html, body {
   .task-item__removeTask:hover{
     background:  grey;
   }
-
-/*------------------TASK ITEM---------------------*/
+/*------------------DEAD LINE---------------------*/
 
 
 
@@ -339,7 +347,7 @@ html, body {
     width:460px;
     border: 1px dashed blue;
     padding: 0;
-    display:  none;
+    /* display:  none; */
   }
   .filters__item{
     display: inline-block;

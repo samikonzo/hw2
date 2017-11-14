@@ -1,7 +1,9 @@
 function TodolistModule(){
 	if(TodolistModule.count == undefined){
 		TodolistModule.count = 0;
-		localStorage.setItem('names', JSON.stringify({}));
+		TodolistModule.names = {};
+		TodolistModule.renamed = {};
+
 	} else {
 		TodolistModule.count++;
 	}
@@ -9,7 +11,7 @@ function TodolistModule(){
 	// templates
 		var listHTML = `<p class="{{ TODOLIST_NAME_CLASS }} {{ EDITABLE_CLASS }}"> TODOLISTNAME </p>
 
-		      <button class="{{ COLLAPSE_BUTTON_CLASS }}"></button>
+		      <button class="{{ COLLAPSE_BUTTON_CLASS }}"></button> 
 
 		      <ul class="{{ MENU }}"> menu
 		        <li class="{{ MENU_ITEM }}"> <button class="{{ ADD_TODOLIST }}"> ADD NEW TODOLIST</button></li>
@@ -170,7 +172,7 @@ function TodolistModule(){
 
 			var widgetHTML;
 
-			tasklistName = tasklistName || (DEFAULT_TODO_LIST_NAME + ' ' + TodolistModule.count++);
+			tasklistName = tasklistName || (DEFAULT_TODO_LIST_NAME + ' ' + TodolistModule.count);
 
 			if(!widget){
 				widget = domElem;
@@ -178,22 +180,14 @@ function TodolistModule(){
 				//naming
 				widget.createdName = tasklistName;
 				widget.name = tasklistName;
-
 				localStorageItemInit();
-
-				var realWidgetName = localStorage.getItem(LOCAL_RENAME_PREFIX + widget.name);
-				if(realWidgetName != null){
-					l('realName?')
-					widget.name = realWidgetName
-				}
 				
-
-
 
 				widgetHTML = templater(todolist_template)(todolistClasses);
 				domElem.innerHTML = widgetHTML;
 				domElem.classList.add(WRAPPER_CLASS);
 
+				//elements
 				widget_name = widget.getElementsByClassName(TODOLIST_NAME_CLASS)[0];
 				widget_collapseBtn = widget.getElementsByClassName(COLLAPSE_BUTTON_CLASS)[0];
 				widget_addTask = widget.getElementsByClassName(MAIN_INPUT_CLASS)[0];
@@ -207,6 +201,13 @@ function TodolistModule(){
 
 				widget_name.textContent = widget.name;
 				makeChangeListening(widget, 'name', widget, 'rename');
+
+				Object.defineProperty(widget, 'collapse', {
+					configurable: true,
+				})
+
+				makeChangeListening(widget, 'collapse', widget, 'change');
+
 				addListeners();
 				createTasksFromLocalStorage();
 				refreshLocalStorage()	
@@ -243,53 +244,9 @@ function TodolistModule(){
 				widget_collapseBtn.onclick = function(e){
 					var btn = this;
 
-					if(widget_collapseBtn.buzy){
-						clearTimeout(widget_collapseBtn.timer)
-					}
+					toggleWidget()
 
-					if(widget.collapse){
-						expandWidget()
-					} else {
-						collapseWidget()
-					}
-
-					function collapseWidget(){
-						if(!widget.collapseHeight){
-							var todolistName = widget.getElementsByClassName(TODOLIST_NAME_CLASS)[0],
-								todolistName_top = todolistName.getBoundingClientRect().top,
-								todolistName_bottom = todolistName.getBoundingClientRect().bottom,
-								widget_top = widget.getBoundingClientRect().top;
-
-							widget.collapseHeight = (todolistName_bottom - widget_top) + (todolistName_top - widget_top);
-							widget.collapseHeight = Math.floor(widget.collapseHeight)
-						}
-
-						widget.fullHeight = widget.offsetHeight
-						widget.style.maxHeight = widget.fullHeight + 'px';
-
-						widget_collapseBtn.buzy = true
-
-						widget_collapseBtn.timer = setTimeout(function(){
-							widget.style.maxHeight = widget.collapseHeight + 'px';
-							widget.collapse = true
-							btn.classList.add(COLLAPSE_BUTTON_COLLAPSED_CLASS);
-						},10)
-					}
-
-					function expandWidget(){
-						widget.style.maxHeight = widget.fullHeight + 'px';
-						widget.collapse = false;
-						btn.classList.remove(COLLAPSE_BUTTON_COLLAPSED_CLASS);
-
-						widget_collapseBtn.timer = setTimeout(function(){
-							widget.style.maxHeight = null;
-						}, 1000)
-					}
-
-					function collapseExpandWidgetEnd(){
-						widget_collapseBtn.buzy = false;
-						delete widget_collapseBtn.timer 
-					}
+					
 				}
 			///////////////////////////	
 
@@ -585,9 +542,18 @@ function TodolistModule(){
 			refreshLocalStorage()
 			
 			collapseItem(li);
-			setTimeout( function(){
+
+			//need single event at collapseEnd
+			// ontransitionend, then remove listener
+			li.addEventListener('collapse', function(){
+				l('REMOVE IT@!')
 				li.remove()
-			},500)			
+			})
+
+			/*li.ontransitionend = function(){
+				li.remove()
+			}*/
+	
 		}
 
 		function clearTaskInput(){
@@ -689,7 +655,6 @@ function TodolistModule(){
 			}
 
 			function taskEdit(item){
-				l(item.cur)
 				var currentLi = item.closest('li');
 
 				if(!item.label) item.label = item.parentElement.querySelector('.' + TASK_ITEM_CHECKBOX_LABEL_CLASS)
@@ -760,7 +725,7 @@ function TodolistModule(){
 					var excessEnter = false;
 					while(item.value[item.value.length-1] == '\n'){
 						excessEnter = true;
-						l('last \n')
+						//l('last \n')
 						item.value = item.value.slice(0,-1)	
 					}
 
@@ -781,32 +746,109 @@ function TodolistModule(){
 			}
 
 			function deadlineEdit(span){
+				var startValue = span.innerHTML
 
+				//hide span ??
+				span.style.opacity = 0;
+
+				var tempInput = document.createElement('input');
+				tempInput.type = 'date';
+				tempInput.value = startValue.replace(/(\d*)?\.(\d*)?\.(\d*)/, '$3-$2-$1');
+				span.parentNode.replaceChild(tempInput, span);
+				tempInput.focus()
+
+				tempInput.onchange = function(e){
+					var newValue = tempInput.value.replace(/(\d*)?-(\d*)?-(\d*)/, '$3.$2.$1');
+					span.value = newValue;
+					tempInput.parentNode.replaceChild(span, tempInput);
+					showDeadline()
+				}
+
+
+				function showDeadline(){
+					span.style.opacity = 1;
+				}
 			}
 		}
 
 		//collapseItem
 		function collapseItem(item){
-			//check fullHeight for not 
-			if(item.fullHeight != undefined) return
+			//check fullStyles
+			//нужно для того, что бы при смене фильтра не обновлялся максимальный размер
+			if(item.fullStyles != undefined) return
 
 			if(!item.style.maxHeight){
 				item.style.maxHeight = item.offsetHeight + 'px';
 			}	
 
 			setTimeout(function(){
-				item.fullHeight = item.offsetHeight;
+				item.fullStyles = {
+					height : item.offsetHeight,
+					paddingTop : item.style.paddingTop,
+					paddingBottom : item.style.paddingBottom,
+					border: item.style.border,
+				}
+
 				item.style.maxHeight = 0;
+				item.style.paddingTop = 0;
+				item.style.paddingBottom = 0;
+				item.style.border = '0px solid rgba(0,0,0,0)';
+
+				if(!item.collapseBind){
+					item.collapseBind = true;
+					item.addEventListener('transitionend', bubblesAfterHeight)
+
+					function bubblesAfterHeight(e){
+						var prop = e.propertyName
+						if(prop != 'max-height') return
+
+						var collapseEvent = new CustomEvent('collapse', {
+								bubbles: true,
+								detail: {
+									item: item,
+								}
+							})
+
+						item.dispatchEvent(collapseEvent);
+					}
+				}
+
 			},10)
 		}
 		
 		//expandItem
 		function expandItem(item){
-			item.style.maxHeight = item.fullHeight + 'px';
-			setTimeout(function(){
-				item.style.maxHeight = null;
-			}, 500)
-			delete item.fullHeight
+			if(item.fullStyles){
+				var full = item.fullStyles,
+					st = item.style;
+
+				st.maxHeight = full.height + 'px';
+				st.paddingTop = full.paddingTop
+				st.paddingBottom = full.paddingBottom
+				st.border = full.border
+			
+				if(!item.expandBind){
+					item.expandBind = true;
+					item.addEventListener('transitionend', bubblesAfterHeight)
+
+					function bubblesAfterHeight(e){
+						var prop = e.propertyName
+						if(prop != 'max-height') return
+
+						var collapseEvent = new CustomEvent('expand', {
+								bubbles: true,
+								detail: {
+									item: item,
+								}
+							})
+
+						item.dispatchEvent(collapseEvent);
+					}
+				}
+			}
+
+
+			delete item.fullStyles
 		}
 	////////////////////////////////////////////////////////////////////////////
 
@@ -879,7 +921,7 @@ function TodolistModule(){
 		function localStorageItemInit(){
 			var newName = widget.createdName;
 
-			var localNames = JSON.parse(localStorage.getItem('names'));
+			var localNames = TodolistModule.names
 
 			//add prefix if newName exist
 			var prefix = 0,
@@ -892,17 +934,25 @@ function TodolistModule(){
 
 			newName = tempName
 
-
 			widget.createdName = newName;
 			widget.name = newName;
-			localNames[newName] = true;
-			localStorage.setItem('names', JSON.stringify(localNames))
+
+
+			var realWidgetName = localStorage.getItem(LOCAL_RENAME_PREFIX + widget.name);
+
+			if(realWidgetName != null){
+				if(!TodolistModule.renamed[realWidgetName]){
+					TodolistModule.renamed[realWidgetName] = true
+					widget.name = realWidgetName
+				}
+			}
+
+			localNames[widget.name] = true;
 		}
 
 		function createTasksFromLocalStorage(){
 			var storageName = LOCAL_NAME_PREFIX + widget.name,
 				localTaskList = localStorage.getItem(storageName);
-
 
 			if(localTaskList){
 				var localList = JSON.parse(localTaskList);
@@ -915,14 +965,15 @@ function TodolistModule(){
 				var	tasks = localList.tasks,
 					options = localList.options;
 
+				if(options.collapse){
+					widget_collapseBtn.click();
+				}
+
 				for(var num in tasks){
 					var task = tasks[num];
 					addNewTask(task.task, task.deadline, task.checked)
 				}	
 
-				if(options.collapse){
-					widget_collapseBtn.click();
-				}
 			}
 		}
 
@@ -951,11 +1002,11 @@ function TodolistModule(){
 				storageName = LOCAL_NAME_PREFIX + widget.name;
 
 			localStorage.setItem(storageName, localList);
-			l(localStorage.getItem(storageName))
+			//l(localStorage.getItem(storageName))
 		}
 
 		function renameLocalStorage(newName, oldName){
-			var localNames = JSON.parse(localStorage.getItem('names'));
+			var localNames = TodolistModule.names
 
 			//add prefix if newName exist
 			var prefix = 0,
@@ -972,7 +1023,7 @@ function TodolistModule(){
 			widget_name.innerHTML = newName;
 			delete localNames[oldName];
 			localNames[newName] = true;
-			localStorage.setItem('names', JSON.stringify(localNames))
+			//localStorage.setItem('names', JSON.stringify(localNames))
 
 
 			//replace storage data
@@ -1036,7 +1087,6 @@ function TodolistModule(){
 		}
 
 		function autoGrow2(item){
-			l('autoGrow2')
 			var tempItem = item.cloneNode(1),
 				computedHeigth;
 
@@ -1051,9 +1101,6 @@ function TodolistModule(){
 			setTimeout(function(){
 				tempItem.remove()
 				item.style.height = computedHeigth + 'px';
-
-				//if(item.label) item.label.style.height = computedHeigth - 10 + 'px';
-
 			},0)
 		}
 
@@ -1061,11 +1108,22 @@ function TodolistModule(){
 			elem.addEventListener(event, onceFunction)
 
 			function onceFunction(e){
-				//l(e)
 				f(e);
 				elem.removeEventListener(event, onceFunction)
 			}
 		}
+		
+		var addOnceEventListenerDelay = delayedFunc(addOnceEventListener, 100);
+
+		function delayedFunc(func, delay){
+			return function(){
+				var arg = arguments;
+				setTimeout(function(){
+					func.apply(null, arg)
+				}, delay)
+			}	
+		}
+
 
 		function checkMouseClickOut(e){
 			var target = e.target,
@@ -1090,10 +1148,67 @@ function TodolistModule(){
 				f()
 			}
 		}
+
+		function collapseWidget(){
+			/*if(!widget.collapseHeight){
+				var todolistName = widget.getElementsByClassName(TODOLIST_NAME_CLASS)[0],
+					todolistName_top = todolistName.getBoundingClientRect().top,
+					todolistName_bottom = todolistName.getBoundingClientRect().bottom,
+					widget_top = widget.getBoundingClientRect().top;
+
+				widget.collapseHeight = (todolistName_bottom - widget_top) + (todolistName_top - widget_top);
+				widget.collapseHeight = Math.floor(widget.collapseHeight)
+			}*/
+
+			widget.fullHeight = widget.offsetHeight;
+			widget.style.maxHeight = widget.fullHeight + 'px';
+
+			widget_collapseBtn.buzy = true
+
+			//!!!!!!!!!!!!!!!!!!!!!!!
+			// hard assignment
+			widget.collapseHeight = 70;
+
+			widget_collapseBtn.timer = setTimeout(function(){
+				widget.style.maxHeight = widget.collapseHeight + 'px';
+				widget.collapse = true
+				widget_collapseBtn.classList.add(COLLAPSE_BUTTON_COLLAPSED_CLASS);
+			},10)
+		}
+
+		function expandWidget(){
+			widget.fullHeight = widget.scrollHeight;
+			widget.style.maxHeight = widget.fullHeight + 'px';
+			widget.collapse = false;
+			widget_collapseBtn.classList.remove(COLLAPSE_BUTTON_COLLAPSED_CLASS);
+
+			widget_collapseBtn.timer = setTimeout(function(){
+				widget.style.maxHeight = null;
+			}, 1000)
+		}
+
+		function collapseExpandWidgetEnd(){
+			widget_collapseBtn.buzy = false;
+			delete widget_collapseBtn.timer 
+		}
+
+		function toggleWidget(){
+			if(widget_collapseBtn.buzy){
+				clearTimeout(widget_collapseBtn.timer)
+			}
+
+			if(widget.collapse){
+				expandWidget()
+			} else {
+				collapseWidget()
+			}
+		}
 	////////////////////////////////////////////////////////////////////////////
 	
 	//public metods
-		this.init = initialize
+		this.init = initialize;
+		this.toggle = toggleWidget;
+		this.collapse = collapseWidget;
 }
 
 
