@@ -89,21 +89,25 @@ html, body {
   }
 /*-----------------------------------------------------*/
 
-/*---------------MENU---------------*/
+/*------------------------MENU------------------------*/
   .todolist-menu{
     display:  none;
   }
   .todolist-menu__item{}
-/*--------------------------------*/
+/*----------------------------------------------------*/
 
-.addTask{
-  display: block;
-  width: 660px;
-  margin: 20px auto 0;
-  padding: 5px 10px;
-  box-sizing: border-box;
-  outline: none;
-}
+/*------------------------INPUT TASK--------------------*/
+  .addTask{
+    display: block;
+    width: 660px;
+    margin: 20px auto 0;
+    padding: 5px 10px;
+    box-sizing: border-box;
+    outline: none;
+  }
+/*----------------------------------------------------*/
+
+
 
 .taskList{
   display: block;
@@ -118,13 +122,12 @@ html, body {
 
   transition: .7s;
 }
-
 .task-item{
   position: relative;
   border-bottom: 1px solid grey;
 
   width: 660px;
-  padding: 10px 10px 0px;
+  padding: 10px 10px 5px;
   margin: 0;
   left: 0;
   text-decoration: none;
@@ -214,10 +217,9 @@ html, body {
     /* color: rgba(255, 255, 255, 0.3); */
     opacity: 0.3;
   }
+/*-----------------------------------------------*/
 
-/*------------------CHECKBOX---------------------*/
-
-/*------------------TASK ITEM---------------------*/
+/*------------------TASK---------------------*/
   .task-item__task{
     display: inline-block;
     width: 520px;
@@ -247,17 +249,17 @@ html, body {
     background: rgba(100, 0, 0, 0.3);
     opacity: 0;
   }
-/*------------------TASK ITEM---------------------*/
+/*---------------------------------------------*/
   
 /*------------------DEAD LINE---------------------*/
   .task-item__deadline{
     display: inline-block;
     width:150px;
     min-width: 150px;
+    height: 30px;
+    line-height: 30px;
     border:1px dashed black;
-    /* min-height: 40px; */
-    height: 100%;
-    padding: 10px;
+    /* padding: 10px; */
     box-sizing: border-box;
     text-align: center;
   }
@@ -275,6 +277,7 @@ html, body {
     position: absolute;
     left: 0;
     width: 100%;
+    height: 100%;
     text-align: center;
     color: red;
   }
@@ -303,7 +306,9 @@ html, body {
       opacity: 0;
     }
   }
+/*-----------------------------------------------*/
 
+/*--------------Remove task button---------------*/
   .task-item__removeTask{
     display: inline-block;
     position: relative;
@@ -334,10 +339,7 @@ html, body {
   .task-item__removeTask:hover{
     background:  grey;
   }
-/*------------------DEAD LINE---------------------*/
-
-
-
+/*-----------------------------------------------*/
 
 
 /*------------------FILTERS---------------------*/
@@ -362,7 +364,7 @@ html, body {
     background: grey;
     color: white;
   }
-/*------------------FILTERS---------------------*/
+/*-----------------------------------------------*/
 
 /*------------------INFOBAR---------------------*/
   .infobar{
@@ -390,7 +392,7 @@ html, body {
   .infobar__remove-btn--hidden{
     opacity: 0;
   }
-/*------------------INFOBAR---------------------*/
+/*-----------------------------------------------*/
 
 .no-tasks{
   width:  100%;

@@ -37,11 +37,12 @@ function TodolistModule(){
 		      </ul>
 
 		      <div class="{{ INFOBAR_CLASS }} {{ INFOBAR_HIDDEN_CLASS }}">
+		        <div class="{{ NO_TASK_CLASS }} {{ NO_TASK_HIDDEN_CLASS }}"> Нет заданий удовлетворяющих требованию </div>
 		        <div class="{{ INFOBAR_REMAIN_CLASS }}">
 		          remaining events:<span class="{{ INFOBAR_REMAIN_COUNT_CLASS }}"></span>
 		        </div>
 		        <button class="{{ INFOBAR_REMOVE_BTN_CLASS }} {{ INFOBAR_REMOVE_BTN_HIDDEN_CLASS }}">done: <span class="{{ INFOBAR_SELECTED_CLASS }} {{ INFOBAR_SPARE_CLASS}}">0</span> | remove it </button>
-		        <div class="{{ NO_TASK_CLASS }} {{ NO_TASK_HIDDEN_CLASS }}"> Нет заданий удовлетворяющих требованию </div>
+		        
 		      </div>`,
 
 			listItemHTML = `<li class="{{ TASK_ITEM_CLASS }}">
@@ -53,27 +54,44 @@ function TodolistModule(){
 	////////////////////////////////////////////////////////////////////////////
 
 	// variables
-		var widget, widget_task_template, widget_addTask, widget_taskList,
-			widget_name, widget_collapseBtn,
-			widget_filters,  widget_noTasksMessage,
+		var widget, //element
+			widget_name, // list name
+			widget_collapseBtn, // widget collapse button
+			widget_addTask, //main widget input
+			widget_filters,  //filters bar
+			widget_taskList, //ul
+			widget_noTasksMessage,
 			widget_infobar, widget_infobarRemain, widget_infobarSelected, widget_infobarRemoveBtn,
 			tasksObj = {tasksCount : 0,	tasksSelected : 0, tasks : {}},
 			taskId = 0,
 			todolist_template = listHTML,
 			todolist_task_item_template = listItemHTML,
+			widget_task_template, // result template 
 			tempInput,
 			dataObj = {
 				tasks: {},
 				options: {
 					collapse: false,
+					filter: undefined,
 				},
 			};
 
-			Object.defineProperty(dataObj.options, 'collapse', {
+		//widget.collapse
+		//widget.filter
+
+		Object.defineProperties(dataObj.options, {
+			collapse : {
 				get: function(){
 					return widget.collapse
+				},	
+			},
+
+			filter: {
+				get: function(){
+					return widget.filter
 				},
-			})
+			}
+		})
 
 		const KEY_ENTER_KEYCODE = 13,
 			  KEY_ESC_KEYCODE = 27,
@@ -200,13 +218,7 @@ function TodolistModule(){
 				widget_noTasksMessage = widget.getElementsByClassName(NO_TASK_CLASS)[0];
 
 				widget_name.textContent = widget.name;
-				makeChangeListening(widget, 'name', widget, 'rename');
-
-				Object.defineProperty(widget, 'collapse', {
-					configurable: true,
-				})
-
-				makeChangeListening(widget, 'collapse', widget, 'change');
+				
 
 				addListeners();
 				createTasksFromLocalStorage();
@@ -217,6 +229,26 @@ function TodolistModule(){
 		function addListeners(){
 			if(!widget) return
 			///////////////////////////
+
+			///////////////////////////	
+			// widget props bind
+			//////////////////////////
+				makeChangeListening(widget, 'name', widget, 'rename');
+
+				Object.defineProperties(widget,{
+					collapse: {
+						configurable: true,
+					},
+
+					filter: {
+						configurable: true,
+					},	
+				})
+
+				makeChangeListening(widget, 'collapse', widget, 'change');
+				makeChangeListening(widget, 'filter', widget, 'change');
+			///////////////////////////
+
 
 			///////////////////////////	
 			// widget change event
@@ -309,112 +341,19 @@ function TodolistModule(){
 					if(target.classList && target.classList.contains(FILTERS_ITEM_SELECTED_CLASS)) return
 
 					//replace class --selected
-						widget_filters.getElementsByClassName(FILTERS_ITEM_SELECTED_CLASS)[0].classList.remove(FILTERS_ITEM_SELECTED_CLASS);
-						target.classList.add(FILTERS_ITEM_SELECTED_CLASS);
+						/*widget_filters.getElementsByClassName(FILTERS_ITEM_SELECTED_CLASS)[0].classList.remove(FILTERS_ITEM_SELECTED_CLASS);
+						target.classList.add(FILTERS_ITEM_SELECTED_CLASS);*/
 
 					//change block value 
 						var selector = target.getAttribute('value');
-						widget_filters.setAttribute('value', selector)
+						widget_filters.setAttribute('value', selector);
+						widget.filter = selector;
 
 					//switch selected
-						var items = widget_taskList.getElementsByClassName(TASK_ITEM_CLASS);
-						switch(selector){
-							case 'all' : 
-								[].forEach.call(items, el => {
-									el.classList.remove(TASK_ITEM_HIDDEN_CLASS);
-									expandItem(el)
-								})
-								break;
-
-							case 'done' : 
-								[].forEach.call(items, el => {
-									if(el.classList.contains(TASK_ITEM_DONE_CLASS)){
-										el.classList.remove(TASK_ITEM_HIDDEN_CLASS)
-										expandItem(el)
-									} else {
-										el.classList.add(TASK_ITEM_HIDDEN_CLASS)
-										collapseItem(el)
-									}
-								})
-								break;
-
-							case 'not-done' : 
-								[].forEach.call(items, el => {
-									if(!el.classList.contains(TASK_ITEM_DONE_CLASS)){
-										el.classList.remove(TASK_ITEM_HIDDEN_CLASS)
-										expandItem(el)
-									} else {
-										el.classList.add(TASK_ITEM_HIDDEN_CLASS)
-										collapseItem(el)
-									}
-								})
-								break;
-
-							case 'tomorrow' : 
-								[].forEach.call(items, el => {
-									var tomorrow = new Date();
-									tomorrow.setDate(tomorrow.getDate() + 1);
-									tomorrow.setHours(0,0,0,0);
-
-									var deadline = el.getElementsByClassName(TASK_ITEM_DEADLINE_CLASS)[0].innerHTML,
-										deadlineDate = new Date( deadline.replace(/(\d*)?\.(\d*)?\.(\d*)/, '$3 $2 $1') );
-
-									if(deadlineDate.getTime() == tomorrow.getTime()){
-										el.classList.remove(TASK_ITEM_HIDDEN_CLASS);
-										expandItem(el)
-									} else {
-										el.classList.add(TASK_ITEM_HIDDEN_CLASS)
-										collapseItem(el)
-									}
-								})
-								break;
-
-							case 'week' : 
-								[].forEach.call(items, el => {
-									var deadline = el.getElementsByClassName(TASK_ITEM_DEADLINE_CLASS)[0].innerHTML,
-										deadlineDate = new Date( deadline.replace(/(\d*)?\.(\d*)?\.(\d*)/, '$3 $2 $1') );
-
-									if(isThisWeek(deadlineDate)){
-										el.classList.remove(TASK_ITEM_HIDDEN_CLASS);
-										expandItem(el)
-									} else {
-										el.classList.add(TASK_ITEM_HIDDEN_CLASS)
-										collapseItem(el)
-									}
-								})
-								break;
-						}
-
-					//visible count
-						var visibleCount = widget_taskList.querySelectorAll('.' + TASK_ITEM_CLASS + ':not(.' + TASK_ITEM_HIDDEN_CLASS + ')').length;
-						//l('visibleCount : ', visibleCount)
-						if(!visibleCount){
-							widget_noTasksMessage.classList.remove(NO_TASK_HIDDEN_CLASS)
-						} else {
-							widget_noTasksMessage.classList.add(NO_TASK_HIDDEN_CLASS)
-						}
-
-					//extra func
-						//check is the date at current week
-						function isThisWeek(date){
-							var today = new Date(),
-								dayNum = today.getDay(),
-								thisWeekMinDate = new Date(),
-								thisWeekMaxDate = new Date();
-
-							dayNum = dayNum == 0 ? 6 : dayNum - 1;
-							thisWeekMinDate.setDate(today.getDate() - dayNum);
-							thisWeekMinDate.setHours(0,0,0,0);
-							thisWeekMaxDate.setDate(today.getDate() + (6 - dayNum));
-							thisWeekMaxDate.setHours(0,0,0,0);
-							
-							if(date.getTime() >= thisWeekMinDate.getTime() &&
-								date.getTime() <= thisWeekMaxDate.getTime()) return true
-
-							return false	
-						}
-
+						filterByType(selector)
 						
+					//visible count
+						checkVisibleCount()
 				})
 			///////////////////////////
 
@@ -553,7 +492,6 @@ function TodolistModule(){
 			/*li.ontransitionend = function(){
 				li.remove()
 			}*/
-	
 		}
 
 		function clearTaskInput(){
@@ -571,31 +509,6 @@ function TodolistModule(){
 			} else if(classList.contains(TASK_ITEM_DEADLINE_CLASS)){
 				deadlineEdit(item)
 			}
-
-			/*var startValue = span.innerHTML;
-
-			if(span.classList.contains(TASK_ITEM_TASK_CLASS)){
-				//task
-				tempInput.type = 'text'
-				tempInput.value = startValue;
-
-				tempInput.classList.remove(TASK_ITEM_TASK_EDIT_DEADLINE_CLASS)
-				tempInput.classList.add(TASK_ITEM_TASK_EDIT_TASK_CLASS)
-
-			} else {
-				//deadline
-				tempInput.type = 'date'
-				tempInput.value = startValue.replace(/(\d*)?\.(\d*)?\.(\d*)/, '$3-$2-$1');
-
-				tempInput.classList.remove(TASK_ITEM_TASK_EDIT_TASK_CLASS);
-				tempInput.classList.add(TASK_ITEM_TASK_EDIT_DEADLINE_CLASS);
-			}
-
-			tempInput.startValue = startValue;
-			tempInput.relatedSpan = span;
-
-			span.parentNode.replaceChild(tempInput, span);
-			tempInput.focus()*/
 
 			function todolistNameEdit(){
 				//widget_name
@@ -651,6 +564,8 @@ function TodolistModule(){
 
 					widget_collapseBtn.classList.remove(COLLAPSE_BUTTON_CLASS + '--hidden')
 					tempRenamingInput.parentElement.replaceChild(widget_name, tempRenamingInput);
+
+					widget_addTask.focus()
 				}
 			}
 
@@ -746,28 +661,28 @@ function TodolistModule(){
 			}
 
 			function deadlineEdit(span){
-				var startValue = span.innerHTML
-
-				//hide span ??
-				span.style.opacity = 0;
+				var startValue = span.innerHTML,
+					currentLi = span.closest('li');
 
 				var tempInput = document.createElement('input');
 				tempInput.type = 'date';
 				tempInput.value = startValue.replace(/(\d*)?\.(\d*)?\.(\d*)/, '$3-$2-$1');
+				tempInput.classList.add(TASK_ITEM_DEADLINE_EDIT_CLASS)
 				span.parentNode.replaceChild(tempInput, span);
 				tempInput.focus()
 
-				tempInput.onchange = function(e){
+				tempInput.oninput = function(e){
+					l('input')
 					var newValue = tempInput.value.replace(/(\d*)?-(\d*)?-(\d*)/, '$3.$2.$1');
-					span.value = newValue;
+					span.innerHTML = newValue;
+					currentLi.liDataObj.deadline = newValue
+
+					if(newValue) span.classList.remove(TASK_ITEM_DEADLINE_EMPTY_CLASS)
+					else span.classList.add(TASK_ITEM_DEADLINE_EMPTY_CLASS)
+
 					tempInput.parentNode.replaceChild(span, tempInput);
-					showDeadline()
 				}
 
-
-				function showDeadline(){
-					span.style.opacity = 1;
-				}
 			}
 		}
 
@@ -974,6 +889,9 @@ function TodolistModule(){
 					addNewTask(task.task, task.deadline, task.checked)
 				}	
 
+				if(options.filter){
+					filterByType(options.filter)
+				}
 			}
 		}
 
@@ -1201,6 +1119,112 @@ function TodolistModule(){
 				expandWidget()
 			} else {
 				collapseWidget()
+			}
+		}
+
+		function filterByType(selector){
+			widget_filters.getElementsByClassName(FILTERS_ITEM_SELECTED_CLASS)[0].classList.remove(FILTERS_ITEM_SELECTED_CLASS);
+			widget_filters.querySelector(`[value="${selector}"]`).classList.add(FILTERS_ITEM_SELECTED_CLASS);
+
+			var items = widget_taskList.getElementsByClassName(TASK_ITEM_CLASS);
+			widget.filter = selector
+
+			switch(selector){
+				case 'all' : 
+					[].forEach.call(items, el => {
+						el.classList.remove(TASK_ITEM_HIDDEN_CLASS);
+						expandItem(el)
+					})
+					break;
+
+				case 'done' : 
+					[].forEach.call(items, el => {
+						if(el.classList.contains(TASK_ITEM_DONE_CLASS)){
+							el.classList.remove(TASK_ITEM_HIDDEN_CLASS)
+							expandItem(el)
+						} else {
+							el.classList.add(TASK_ITEM_HIDDEN_CLASS)
+							collapseItem(el)
+						}
+					})
+					break;
+
+				case 'not-done' : 
+					[].forEach.call(items, el => {
+						if(!el.classList.contains(TASK_ITEM_DONE_CLASS)){
+							el.classList.remove(TASK_ITEM_HIDDEN_CLASS)
+							expandItem(el)
+						} else {
+							el.classList.add(TASK_ITEM_HIDDEN_CLASS)
+							collapseItem(el)
+						}
+					})
+					break;
+
+				case 'tomorrow' : 
+					[].forEach.call(items, el => {
+						var tomorrow = new Date();
+						tomorrow.setDate(tomorrow.getDate() + 1);
+						tomorrow.setHours(0,0,0,0);
+
+						var deadline = el.getElementsByClassName(TASK_ITEM_DEADLINE_CLASS)[0].innerHTML,
+							deadlineDate = new Date( deadline.replace(/(\d*)?\.(\d*)?\.(\d*)/, '$3 $2 $1') );
+
+						if(deadlineDate.getTime() == tomorrow.getTime()){
+							el.classList.remove(TASK_ITEM_HIDDEN_CLASS);
+							expandItem(el)
+						} else {
+							el.classList.add(TASK_ITEM_HIDDEN_CLASS)
+							collapseItem(el)
+						}
+					})
+					break;
+
+				case 'week' : 
+					[].forEach.call(items, el => {
+						var deadline = el.getElementsByClassName(TASK_ITEM_DEADLINE_CLASS)[0].innerHTML,
+							deadlineDate = new Date( deadline.replace(/(\d*)?\.(\d*)?\.(\d*)/, '$3 $2 $1') );
+
+						if(isThisWeek(deadlineDate)){
+							el.classList.remove(TASK_ITEM_HIDDEN_CLASS);
+							expandItem(el)
+						} else {
+							el.classList.add(TASK_ITEM_HIDDEN_CLASS)
+							collapseItem(el)
+						}
+					})
+					break;
+			}
+
+			checkVisibleCount()
+
+			//extra func
+				//check is the date at current week
+				function isThisWeek(date){
+					var today = new Date(),
+						dayNum = today.getDay(),
+						thisWeekMinDate = new Date(),
+						thisWeekMaxDate = new Date();
+
+					dayNum = dayNum == 0 ? 6 : dayNum - 1;
+					thisWeekMinDate.setDate(today.getDate() - dayNum);
+					thisWeekMinDate.setHours(0,0,0,0);
+					thisWeekMaxDate.setDate(today.getDate() + (6 - dayNum));
+					thisWeekMaxDate.setHours(0,0,0,0);
+					
+					if(date.getTime() >= thisWeekMinDate.getTime() &&
+						date.getTime() <= thisWeekMaxDate.getTime()) return true
+
+					return false	
+				}
+		}
+
+		function checkVisibleCount(){
+			var visibleCount = widget_taskList.querySelectorAll('.' + TASK_ITEM_CLASS + ':not(.' + TASK_ITEM_HIDDEN_CLASS + ')').length;
+			if(!visibleCount){
+				widget_noTasksMessage.classList.remove(NO_TASK_HIDDEN_CLASS)
+			} else {
+				widget_noTasksMessage.classList.add(NO_TASK_HIDDEN_CLASS)
 			}
 		}
 	////////////////////////////////////////////////////////////////////////////
